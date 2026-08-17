@@ -1,0 +1,29 @@
+package com.gymmanagement.client;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface ClientRepository extends JpaRepository<Client, Long> {
+
+    Optional<Client> findByUserId(Long userId);
+
+    List<Client> findByAssignedCoachId(Long coachId);
+
+    List<Client> findByAssignedDieticianId(Long dieticianId);
+
+    List<Client> findByAssignedCoachIsNotNull();
+
+    List<Client> findByAssignedDieticianIsNotNull();
+
+    @Query("select c from Client c where :keyword is null or " +
+            "lower(c.user.firstName) like lower(concat('%', :keyword, '%')) or " +
+            "lower(c.user.lastName) like lower(concat('%', :keyword, '%')) or " +
+            "lower(c.user.email) like lower(concat('%', :keyword, '%'))")
+    Page<Client> search(@Param("keyword") String keyword, Pageable pageable);
+}

@@ -1,0 +1,88 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: gym-management-system
+
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=gym_management;encrypt=true;trustServerCertificate=true
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 10
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.SQLServerDialect
+        jdbc:
+          time_zone: UTC
+
+  jackson:
+    default-property-inclusion: non_null
+    time-zone: UTC
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+logging:
+  level:
+    root: INFO
+    com.gymmanagement: DEBUG
+    org.hibernate.SQL: WARN
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:c29tZS1zdXBlci1zZWNyZXQta2V5LWZvci1neW0tbWFuYWdlbWVudC1zeXN0ZW0tbG9jYWwtZGV2LW9ubHk=}
+    access-token-expiration-ms: 900000        # 15 minutes
+    refresh-token-expiration-ms: 604800000    # 7 days
+  cors:
+    allowed-origins: http://localhost:5173
+  whatsapp:
+    enabled: true
+    provider: twilio  # log | twilio | cloud
+    default-country-code: "+91"
+    twilio:
+      account-sid: ${TWILIO_ACCOUNT_SID:}
+      auth-token: ${TWILIO_AUTH_TOKEN:}
+      from-number: ${TWILIO_FROM_NUMBER:}
+    cloud:
+      api-version: ${WHATSAPP_CLOUD_API_VERSION:v20.0}
+      phone-number-id: ${WHATSAPP_CLOUD_PHONE_NUMBER_ID:}
+      access-token: ${WHATSAPP_CLOUD_ACCESS_TOKEN:}
+  notifications:
+    time-zone: Asia/Kolkata
+    diet-reminder-cron: 0 * * * * *
+    coach-plan-reminder-cron: 0 0 8 * * *
+    dietician-plan-reminder-cron: 0 15 8 * * *
+  ai:
+    enabled: ${AI_ENABLED:true}
+    provider: ${AI_PROVIDER:openai}
+    system-prompt: ${AI_SYSTEM_PROMPT:You are an AI assistant for a gym management platform. Give concise, practical, safe answers.}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+      model: ${OPENAI_MODEL:gpt-4o-mini}
+      temperature: ${OPENAI_TEMPERATURE:0.3}
+      max-tokens: ${OPENAI_MAX_TOKENS:500}

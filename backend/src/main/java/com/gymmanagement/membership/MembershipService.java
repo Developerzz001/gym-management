@@ -1,0 +1,15 @@
+package com.gymmanagement.membership;
+
+import com.gymmanagement.membership.dto.AssignMembershipRequest;
+import com.gymmanagement.membership.dto.MembershipResponse;
+
+import java.util.List;
+
+public interface MembershipService {
+
+    MembershipResponse assignMembership(AssignMembershipRequest request);
+
+    MembershipResponse renewMembership(Long clientId);
+
+    List<MembershipResponse> getByClient(Long clientId);
+}
