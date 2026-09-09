@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gymmanagement.common.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +32,7 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
@@ -83,6 +85,8 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider())
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint((request, response, authException) -> {
+                            log.warn("Authentication required: method={} path={} reason={}",
+                                    request.getMethod(), request.getRequestURI(), authException.getMessage());
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             ErrorResponse errorResponse = ErrorResponse.builder()
@@ -96,6 +100,8 @@ public class SecurityConfig {
                             response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            log.warn("Access denied: method={} path={} reason={}",
+                                    request.getMethod(), request.getRequestURI(), accessDeniedException.getMessage());
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             ErrorResponse errorResponse = ErrorResponse.builder()

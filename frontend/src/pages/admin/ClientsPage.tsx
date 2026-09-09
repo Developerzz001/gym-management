@@ -19,9 +19,12 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import BlockIcon from '@mui/icons-material/Block';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import ContactPageIcon from '@mui/icons-material/ContactPage';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { useClientsQuery, useDeactivateClientMutation } from '@/api/clientsApi';
+import { useActivateClientMutation, useClientsQuery, useDeactivateClientMutation } from '@/api/clientsApi';
 import { useCoachesQuery } from '@/api/coachesApi';
 import { useDieticiansQuery } from '@/api/dieticiansApi';
 import { useAssignCoachMutation, useAssignDieticianMutation } from '@/api/assignmentsApi';
@@ -34,8 +37,11 @@ export function ClientsPage() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [formOpen, setFormOpen] = useState(false);
+  const [inquiryFormOpen, setInquiryFormOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<ClientResponse | null>(null);
+  const [conversionTarget, setConversionTarget] = useState<ClientResponse | null>(null);
   const [deactivateTarget, setDeactivateTarget] = useState<ClientResponse | null>(null);
+  const [activateTarget, setActivateTarget] = useState<ClientResponse | null>(null);
   const [assignTarget, setAssignTarget] = useState<ClientResponse | null>(null);
   const [assignCoachId, setAssignCoachId] = useState<number | ''>('');
   const [assignDieticianId, setAssignDieticianId] = useState<number | ''>('');
@@ -45,6 +51,7 @@ export function ClientsPage() {
   const { data: coaches } = useCoachesQuery('', 0, 100);
   const { data: dieticians } = useDieticiansQuery('', 0, 100);
   const deactivateMutation = useDeactivateClientMutation();
+  const activateMutation = useActivateClientMutation();
   const assignCoachMutation = useAssignCoachMutation();
   const assignDieticianMutation = useAssignDieticianMutation();
 
@@ -53,6 +60,25 @@ export function ClientsPage() {
     { field: 'lastName', headerName: 'Last Name', flex: 1 },
     { field: 'email', headerName: 'Email', flex: 1.3 },
     { field: 'contactNumber', headerName: 'Contact', flex: 1 },
+    {
+      field: 'membershipAssigned', headerName: 'Membership', width: 145,
+      renderCell: (params) => (
+        <Chip
+          size="small"
+          label={params.row.membershipAssigned ? 'Assigned' : 'Not Assigned'}
+          color={params.row.membershipAssigned ? 'primary' : 'default'}
+          variant="outlined"
+        />
+      ),
+    },
+    {
+      field: 'membershipStartDate', headerName: 'Started', width: 125,
+      valueGetter: (_value, row) => row.membershipStartDate ?? '-',
+    },
+    {
+      field: 'membershipEndDate', headerName: 'Expires', width: 125,
+      valueGetter: (_value, row) => row.membershipEndDate ?? '-',
+    },
     {
       field: 'assignedCoachName', headerName: 'Coach', flex: 1,
       renderCell: (params) => params.value || <Chip size="small" label="Unassigned" variant="outlined" />,
@@ -63,33 +89,68 @@ export function ClientsPage() {
     },
     {
       field: 'active', headerName: 'Status', width: 110,
+      valueGetter: (_value, row) => row.membershipActive ? 'Active' : 'Inactive',
       renderCell: (params) => (
-        <Chip size="small" label={params.value ? 'Active' : 'Inactive'} color={params.value ? 'success' : 'default'} />
+        <Chip size="small" label={params.row.membershipActive ? 'Active' : 'Inactive'} color={params.row.membershipActive ? 'success' : 'default'} />
+      ),
+    },
+    {
+      field: 'registrationType', headerName: 'Type', width: 120,
+      valueGetter: (_value, row) => row.registrationType === 'INQUIRY' ? 'Inquiry' : 'Client',
+      renderCell: (params) => (
+        <Chip size="small" label={params.row.registrationType === 'INQUIRY' ? 'Inquiry' : 'Client'}
+          color={params.row.registrationType === 'INQUIRY' ? 'warning' : 'success'} variant="outlined" />
       ),
     },
     {
       field: 'actions', headerName: 'Actions', width: 160, sortable: false,
       renderCell: (params) => (
         <Box>
-          <Tooltip title="Edit">
-            <IconButton size="small" onClick={() => { setSelectedClient(params.row); setFormOpen(true); }}>
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Assign Coach/Dietician">
-            <IconButton size="small" onClick={() => {
-              setAssignTarget(params.row);
-              setAssignCoachId(params.row.assignedCoachId ?? '');
-              setAssignDieticianId(params.row.assignedDieticianId ?? '');
-            }}>
-              <GroupAddIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Deactivate">
-            <IconButton size="small" onClick={() => setDeactivateTarget(params.row)} disabled={!params.row.active}>
-              <BlockIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          {params.row.registrationType !== 'INQUIRY' && (
+            <Tooltip title="Edit">
+              <IconButton
+                size="small"
+                disabled={!params.row.active}
+                onClick={() => { setSelectedClient(params.row); setFormOpen(true); }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {params.row.registrationType === 'INQUIRY' && (
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<PersonAddIcon />}
+              onClick={() => setConversionTarget(params.row)}
+            >
+              Convert to Client
+            </Button>
+          )}
+          {params.row.registrationType !== 'INQUIRY' && (
+            <Tooltip title="Assign Coach/Dietician">
+              <IconButton size="small" disabled={!params.row.active} onClick={() => {
+                setAssignTarget(params.row);
+                setAssignCoachId(params.row.assignedCoachId ?? '');
+                setAssignDieticianId(params.row.assignedDieticianId ?? '');
+              }}>
+                <GroupAddIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {params.row.registrationType === 'INQUIRY' ? null : params.row.active ? (
+            <Tooltip title="Deactivate">
+              <IconButton size="small" onClick={() => setDeactivateTarget(params.row)}>
+                <BlockIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Activate client">
+              <IconButton size="small" onClick={() => setActivateTarget(params.row)}>
+                <CheckCircleIcon fontSize="small" color="success" />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       ),
     },
@@ -117,9 +178,14 @@ export function ClientsPage() {
         title="Clients"
         subtitle="Register and manage gym clients"
         action={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setSelectedClient(null); setFormOpen(true); }}>
-            Register Client
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setSelectedClient(null); setFormOpen(true); }}>
+              Register Client
+            </Button>
+            <Button variant="outlined" startIcon={<ContactPageIcon />} onClick={() => setInquiryFormOpen(true)}>
+              Register Inquiry
+            </Button>
+          </Box>
         }
       />
 
@@ -148,6 +214,13 @@ export function ClientsPage() {
       </Paper>
 
       <ClientFormDialog open={formOpen} onClose={() => setFormOpen(false)} client={selectedClient} />
+      <ClientFormDialog open={inquiryFormOpen} onClose={() => setInquiryFormOpen(false)} inquiry />
+      <ClientFormDialog
+        open={!!conversionTarget}
+        onClose={() => setConversionTarget(null)}
+        client={conversionTarget}
+        conversion
+      />
 
       <ConfirmDialog
         open={!!deactivateTarget}
@@ -156,6 +229,15 @@ export function ClientsPage() {
         onClose={() => setDeactivateTarget(null)}
         confirmColor="error"
         onConfirm={() => deactivateTarget && deactivateMutation.mutate(deactivateTarget.id)}
+      />
+
+      <ConfirmDialog
+        open={!!activateTarget}
+        title="Activate Client"
+        message={`Activate ${activateTarget?.firstName} ${activateTarget?.lastName}? They will be able to log in again.`}
+        onClose={() => setActivateTarget(null)}
+        confirmColor="primary"
+        onConfirm={() => activateTarget && activateMutation.mutate(activateTarget.id)}
       />
 
       <Dialog open={!!assignTarget} onClose={() => setAssignTarget(null)} maxWidth="xs" fullWidth>

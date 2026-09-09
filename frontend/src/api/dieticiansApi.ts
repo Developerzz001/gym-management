@@ -48,6 +48,28 @@ export function useUpdateDieticianMutation() {
   });
 }
 
+export function useActivateDieticianMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const response = await axiosClient.patch<ApiResponse<DieticianResponse>>(`/dieticians/${id}/activate`);
+      return response.data.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dieticians'] }),
+  });
+}
+
+export function useDeactivateDieticianMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const response = await axiosClient.patch<ApiResponse<DieticianResponse>>(`/dieticians/${id}/deactivate`);
+      return response.data.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dieticians'] }),
+  });
+}
+
 export function useDeleteDieticianMutation() {
   const queryClient = useQueryClient();
   return useMutation({

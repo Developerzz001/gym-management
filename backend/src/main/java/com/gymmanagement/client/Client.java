@@ -3,6 +3,7 @@ package com.gymmanagement.client;
 import com.gymmanagement.coach.FitnessCoach;
 import com.gymmanagement.common.entity.BaseEntity;
 import com.gymmanagement.dietician.Dietician;
+import com.gymmanagement.membership.Membership;
 import com.gymmanagement.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,6 +13,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -35,6 +39,16 @@ public class Client extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
+
+    @OneToMany(mappedBy = "client", fetch = FetchType.LAZY)
+    @OrderBy("endDate DESC")
+    @EqualsAndHashCode.Exclude
+    private List<Membership> memberships;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "registration_type", length = 20)
+    @Builder.Default
+    private RegistrationType registrationType = RegistrationType.REGISTERED;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gender", length = 20)

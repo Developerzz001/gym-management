@@ -4,6 +4,8 @@ export type Role = 'ADMIN' | 'FITNESS_COACH' | 'DIETICIAN' | 'CLIENT';
 
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 
+export type RegistrationType = 'REGISTERED' | 'INQUIRY';
+
 export type ExerciseCategory =
   | 'CHEST'
   | 'BACK'
@@ -85,6 +87,11 @@ export interface ClientResponse {
   lastName: string;
   email: string;
   active: boolean;
+  membershipActive: boolean;
+  membershipAssigned: boolean;
+  membershipStartDate?: string;
+  membershipEndDate?: string;
+  registrationType: RegistrationType;
   gender?: Gender;
   dateOfBirth?: string;
   heightCm?: number;

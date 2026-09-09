@@ -19,4 +19,6 @@ public interface UserService {
     User getUserEntityById(Long id);
 
     User getUserEntityByEmail(String email);
+
+    User saveUser(User user);
 }

@@ -1,6 +1,7 @@
 package com.gymmanagement.client.dto;
 
 import com.gymmanagement.client.Gender;
+import com.gymmanagement.client.RegistrationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,6 +23,11 @@ public class ClientResponse {
     private String lastName;
     private String email;
     private boolean active;
+    private boolean membershipActive;
+    private boolean membershipAssigned;
+    private LocalDate membershipStartDate;
+    private LocalDate membershipEndDate;
+    private RegistrationType registrationType;
 
     private Gender gender;
     private LocalDate dateOfBirth;

@@ -4,22 +4,31 @@ import com.gymmanagement.auth.dto.ChangePasswordRequest;
 import com.gymmanagement.auth.dto.LoginRequest;
 import com.gymmanagement.auth.dto.LoginResponse;
 import com.gymmanagement.auth.dto.RefreshTokenRequest;
+import com.gymmanagement.client.Client;
+import com.gymmanagement.client.ClientRepository;
 import com.gymmanagement.common.exception.BadRequestException;
 import com.gymmanagement.common.exception.UnauthorizedException;
+import com.gymmanagement.membership.Membership;
+import com.gymmanagement.membership.MembershipRepository;
+import com.gymmanagement.membership.MembershipStatus;
 import com.gymmanagement.security.JwtService;
 import com.gymmanagement.security.UserPrincipal;
 import com.gymmanagement.user.User;
 import com.gymmanagement.user.UserRepository;
 import com.gymmanagement.user.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
 
@@ -29,6 +38,8 @@ public class AuthServiceImpl implements AuthService {
     private final UserService userService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ClientRepository clientRepository;
+    private final MembershipRepository membershipRepository;
 
     @Override
     @Transactional
@@ -37,11 +48,14 @@ public class AuthServiceImpl implements AuthService {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         User user = userService.getUserEntityByEmail(request.getEmail());
+        validateActiveUser(user);
+        validateClientMembership(user);
         UserPrincipal principal = new UserPrincipal(user);
 
         String accessToken = jwtService.generateAccessToken(principal);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
+        log.info("User logged in successfully: userId={} role={}", user.getId(), user.getRole());
         return buildLoginResponse(user, accessToken, refreshToken.getToken());
     }
 
@@ -50,12 +64,15 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse refreshToken(RefreshTokenRequest request) {
         RefreshToken storedToken = refreshTokenService.verifyRefreshToken(request.getRefreshToken());
         User user = storedToken.getUser();
+        validateActiveUser(user);
+        validateClientMembership(user);
         UserPrincipal principal = new UserPrincipal(user);
 
         String accessToken = jwtService.generateAccessToken(principal);
         refreshTokenService.revokeToken(storedToken.getToken());
         RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user);
 
+        log.info("Access token refreshed: userId={} role={}", user.getId(), user.getRole());
         return buildLoginResponse(user, accessToken, newRefreshToken.getToken());
     }
 
@@ -63,6 +80,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void logout(RefreshTokenRequest request) {
         refreshTokenService.revokeToken(request.getRefreshToken());
+        log.debug("Refresh token revoked during logout");
     }
 
     @Override
@@ -74,6 +92,7 @@ public class AuthServiceImpl implements AuthService {
         }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+        log.info("Password changed successfully: userId={}", user.getId());
     }
 
     private LoginResponse buildLoginResponse(User user, String accessToken, String refreshToken) {
@@ -86,5 +105,27 @@ public class AuthServiceImpl implements AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    private void validateClientMembership(User user) {
+        if (user.getRole() != com.gymmanagement.user.Role.CLIENT) {
+            return;
+        }
+
+        Client client = clientRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new UnauthorizedException("Client profile was not found"));
+        Membership membership = membershipRepository.findFirstByClientIdOrderByEndDateDesc(client.getId())
+                .orElseThrow(() -> new UnauthorizedException("No active membership found. Please purchase a membership to login."));
+
+        if (membership.getStatus() != MembershipStatus.ACTIVE
+                || membership.getEndDate().isBefore(LocalDate.now())) {
+            throw new UnauthorizedException("Your membership has expired. Please renew your membership to login.");
+        }
+    }
+
+    private void validateActiveUser(User user) {
+        if (!user.isActive()) {
+            throw new UnauthorizedException("Account is deactivated");
+        }
     }
 }

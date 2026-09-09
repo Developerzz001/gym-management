@@ -36,7 +36,7 @@ public class DataSeeder implements CommandLineRunner {
                 .build();
         userRepository.save(admin);
         log.info("==============================================================");
-        log.info("Default ADMIN account created -> email: {} | password: {}", DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD);
+        log.info("Default ADMIN account created -> email: {}", DEFAULT_ADMIN_EMAIL);
         log.info("==============================================================");
     }
 }

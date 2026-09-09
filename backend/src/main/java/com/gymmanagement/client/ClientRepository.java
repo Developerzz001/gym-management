@@ -13,15 +13,19 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     Optional<Client> findByUserId(Long userId);
 
-    List<Client> findByAssignedCoachId(Long coachId);
+    @Query("select c from Client c where c.assignedCoach.id = :coachId " +
+            "and (c.registrationType is null or c.registrationType = com.gymmanagement.client.RegistrationType.REGISTERED)")
+    List<Client> findRegisteredByAssignedCoachId(@Param("coachId") Long coachId);
 
-    List<Client> findByAssignedDieticianId(Long dieticianId);
+    @Query("select c from Client c where c.assignedDietician.id = :dieticianId " +
+            "and (c.registrationType is null or c.registrationType = com.gymmanagement.client.RegistrationType.REGISTERED)")
+    List<Client> findRegisteredByAssignedDieticianId(@Param("dieticianId") Long dieticianId);
 
     List<Client> findByAssignedCoachIsNotNull();
 
     List<Client> findByAssignedDieticianIsNotNull();
 
-    @Query("select c from Client c where :keyword is null or " +
+    @Query("select c from Client c where " +
             "lower(c.user.firstName) like lower(concat('%', :keyword, '%')) or " +
             "lower(c.user.lastName) like lower(concat('%', :keyword, '%')) or " +
             "lower(c.user.email) like lower(concat('%', :keyword, '%'))")

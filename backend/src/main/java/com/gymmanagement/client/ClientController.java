@@ -2,6 +2,7 @@ package com.gymmanagement.client;
 
 import com.gymmanagement.client.dto.ClientRequest;
 import com.gymmanagement.client.dto.ClientResponse;
+import com.gymmanagement.client.dto.ClientProfileRequest;
 import com.gymmanagement.common.dto.ApiResponse;
 import com.gymmanagement.common.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,6 +31,14 @@ public class ClientController {
         return ApiResponse.success("Client registered successfully", clientService.registerClient(request));
     }
 
+    @PostMapping("/inquiries")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Register a client inquiry")
+    public ApiResponse<ClientResponse> registerInquiry(@Valid @RequestBody ClientRequest request) {
+        return ApiResponse.success("Client inquiry registered successfully", clientService.registerInquiry(request));
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update client profile")
@@ -42,6 +51,13 @@ public class ClientController {
     @Operation(summary = "Deactivate a client account")
     public ApiResponse<ClientResponse> deactivateClient(@PathVariable Long id) {
         return ApiResponse.success("Client deactivated successfully", clientService.deactivateClient(id));
+    }
+
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Activate a client account")
+    public ApiResponse<ClientResponse> activateClient(@PathVariable Long id) {
+        return ApiResponse.success("Client activated successfully", clientService.activateClient(id));
     }
 
     @GetMapping("/{id}")
@@ -59,6 +75,15 @@ public class ClientController {
         return ApiResponse.success(clientService.getClientByUserId(userId));
     }
 
+    @PutMapping("/me")
+    @PreAuthorize("hasRole('CLIENT')")
+    @Operation(summary = "Update the currently logged-in client's personal profile")
+    public ApiResponse<ClientResponse> updateMyProfile(Authentication authentication,
+                                                        @Valid @RequestBody ClientProfileRequest request) {
+        Long userId = userRepository.findByEmailIgnoreCase(authentication.getName()).orElseThrow().getId();
+        return ApiResponse.success("Profile updated successfully", clientService.updateOwnProfile(userId, request));
+    }
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Search / list clients with pagination")
@@ -67,6 +92,14 @@ public class ClientController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ApiResponse.success(clientService.getClients(keyword, page, size));
+    }
+
+    @PostMapping("/{id}/convert")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Convert a client inquiry into a registered client")
+    public ApiResponse<ClientResponse> convertInquiry(@PathVariable Long id,
+                                                       @Valid @RequestBody ClientRequest request) {
+        return ApiResponse.success("Inquiry converted to client successfully", clientService.convertInquiry(id, request));
     }
 
     @GetMapping("/assigned-coach")

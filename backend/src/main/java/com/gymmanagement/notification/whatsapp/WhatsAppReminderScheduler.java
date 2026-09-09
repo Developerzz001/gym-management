@@ -41,8 +41,11 @@ public class WhatsAppReminderScheduler {
     @Transactional(readOnly = true)
     public void sendDietMealReminders() {
         LocalTime now = LocalTime.now(ZoneId.of(notificationTimeZone)).withSecond(0).withNano(0);
+        int remindersSent = 0;
+        int clientsChecked = 0;
 
         for (Client client : clientRepository.findByAssignedDieticianIsNotNull()) {
+            clientsChecked++;
             DietPlan plan = dietPlanRepository.findTopByClientIdOrderByCreatedAtDesc(client.getId()).orElse(null);
             if (plan == null) {
                 continue;
@@ -58,39 +61,48 @@ public class WhatsAppReminderScheduler {
                             detail.getFoodItem(),
                             detail.getQuantity()
                     );
+                    remindersSent++;
                 }
             }
         }
+        log.debug("Diet reminder job completed: time={} clientsChecked={} remindersSent={}",
+                now, clientsChecked, remindersSent);
     }
 
     @Scheduled(cron = "${app.notifications.coach-plan-reminder-cron:0 0 8 * * *}")
     @Transactional(readOnly = true)
     public void remindCoachesToAddWorkoutPlans() {
+        int coachesNotified = 0;
         for (FitnessCoach coach : fitnessCoachRepository.findAll()) {
-            List<Client> assignedClients = clientRepository.findByAssignedCoachId(coach.getId());
+            List<Client> assignedClients = clientRepository.findRegisteredByAssignedCoachId(coach.getId());
             int missingPlans = (int) assignedClients.stream()
                     .filter(client -> !workoutPlanRepository.existsByClientIdAndCoachId(client.getId(), coach.getId()))
                     .count();
 
             if (missingPlans > 0) {
                 whatsAppNotificationService.sendCoachMissingPlanReminder(coach, missingPlans);
+                coachesNotified++;
             }
         }
+        log.debug("Coach plan reminder job completed: coachesNotified={}", coachesNotified);
     }
 
     @Scheduled(cron = "${app.notifications.dietician-plan-reminder-cron:0 15 8 * * *}")
     @Transactional(readOnly = true)
     public void remindDieticiansToAddDietPlans() {
+        int dieticiansNotified = 0;
         for (Dietician dietician : dieticianRepository.findAll()) {
-            List<Client> assignedClients = clientRepository.findByAssignedDieticianId(dietician.getId());
+            List<Client> assignedClients = clientRepository.findRegisteredByAssignedDieticianId(dietician.getId());
             int missingPlans = (int) assignedClients.stream()
                     .filter(client -> !dietPlanRepository.existsByClientIdAndDieticianId(client.getId(), dietician.getId()))
                     .count();
 
             if (missingPlans > 0) {
                 whatsAppNotificationService.sendDieticianMissingPlanReminder(dietician, missingPlans);
+                dieticiansNotified++;
             }
         }
+        log.debug("Dietician plan reminder job completed: dieticiansNotified={}", dieticiansNotified);
     }
 
     private LocalTime defaultMealTime(MealType mealType) {

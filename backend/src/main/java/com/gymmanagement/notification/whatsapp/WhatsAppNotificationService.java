@@ -61,10 +61,10 @@ public class WhatsAppNotificationService {
                         phone -> {
                             boolean sent = whatsAppMessageSender.sendMessage(phone, message);
                             if (!sent) {
-                                log.warn("WhatsApp send returned false for userId={} phone={}", user.getId(), phone);
+                                log.warn("WhatsApp send returned false for userId={}", user.getId());
                             }
                         },
-                        () -> log.warn("User {} has no valid mobile number for WhatsApp", user.getEmail())
+                        () -> log.warn("User has no valid mobile number for WhatsApp: userId={}", user.getId())
                 );
     }
 

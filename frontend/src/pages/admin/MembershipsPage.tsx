@@ -69,6 +69,9 @@ function AssignMembershipDialog({ open, onClose }: { open: boolean; onClose: () 
   const { data: clients } = useClientsQuery('', 0, 200);
   const { data: plans } = useMembershipPlansQuery();
   const assignMutation = useAssignMembershipMutation();
+  const registeredActiveClients = clients?.content.filter(
+    (client) => client.registrationType === 'REGISTERED'
+  ) ?? [];
 
   const formik = useFormik({
     initialValues: { clientId: '', membershipPlanId: '', startDate: new Date().toISOString().slice(0, 10) },
@@ -94,7 +97,9 @@ function AssignMembershipDialog({ open, onClose }: { open: boolean; onClose: () 
         <DialogContent>
           {errorMessage && <Alert severity="error" sx={{ mb: 2 }}>{errorMessage}</Alert>}
           <TextField select fullWidth margin="normal" label="Client" name="clientId" value={formik.values.clientId} onChange={formik.handleChange}>
-            {clients?.content.map((c) => <MenuItem key={c.id} value={c.id}>{c.firstName} {c.lastName}</MenuItem>)}
+            {registeredActiveClients.map((c) => (
+              <MenuItem key={c.id} value={c.id}>{c.firstName} {c.lastName}</MenuItem>
+            ))}
           </TextField>
           <TextField select fullWidth margin="normal" label="Membership Plan" name="membershipPlanId" value={formik.values.membershipPlanId} onChange={formik.handleChange}>
             {plans?.map((p) => <MenuItem key={p.id} value={p.id}>{p.name} ({p.durationDays} days)</MenuItem>)}

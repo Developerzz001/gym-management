@@ -78,6 +78,34 @@ export function useRegisterClientMutation() {
   });
 }
 
+export function useRegisterInquiryMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: ClientRequest) => {
+      const response = await axiosClient.post<ApiResponse<ClientResponse>>('/clients/inquiries', payload);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['inquiries'] });
+    },
+  });
+}
+
+export function useConvertInquiryMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: number; payload: ClientRequest }) => {
+      const response = await axiosClient.post<ApiResponse<ClientResponse>>(`/clients/${id}/convert`, payload);
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inquiries'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+    },
+  });
+}
+
 export function useUpdateClientMutation() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -94,6 +122,17 @@ export function useDeactivateClientMutation() {
   return useMutation({
     mutationFn: async (id: number) => {
       const response = await axiosClient.patch<ApiResponse<ClientResponse>>(`/clients/${id}/deactivate`);
+      return response.data.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['clients'] }),
+  });
+}
+
+export function useActivateClientMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const response = await axiosClient.patch<ApiResponse<ClientResponse>>(`/clients/${id}/activate`);
       return response.data.data;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['clients'] }),

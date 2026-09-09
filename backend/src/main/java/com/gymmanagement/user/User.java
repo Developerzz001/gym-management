@@ -47,6 +47,12 @@ public class User extends BaseEntity {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
+    @Column(name = "profile_image_data")
+    private byte[] profileImage;
+
+    @Column(name = "profile_image_content_type", length = 100)
+    private String profileImageContentType;
+
     public String getFullName() {
         return firstName + " " + lastName;
     }

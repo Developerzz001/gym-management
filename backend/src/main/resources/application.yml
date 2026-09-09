@@ -8,10 +8,10 @@ spring:
     name: gym-management-system
 
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=gym_management;encrypt=true;trustServerCertificate=true
-    username: ${DB_USERNAME:sa}
-    password: ${DB_PASSWORD:}
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:postgresql://localhost:5432/gym_management
+    username: postgres
+    password: 12345
+    driver-class-name: org.postgresql.Driver
     hikari:
       minimum-idle: 2
       maximum-pool-size: 10
@@ -25,7 +25,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.SQLServerDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
           time_zone: UTC
 

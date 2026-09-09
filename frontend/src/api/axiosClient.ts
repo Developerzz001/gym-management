@@ -1,7 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import type { ApiResponse, LoginResponse } from '@/types';
 
-const AUTH_STORAGE_KEY = 'gym_auth';
+const LEGACY_AUTH_STORAGE_KEY = 'gym_auth';
 
 export interface StoredAuth {
   accessToken: string;
@@ -13,22 +13,18 @@ export interface StoredAuth {
   role: string;
 }
 
+let currentAuth: StoredAuth | null = null;
+
+if (typeof localStorage !== 'undefined') {
+  localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
+}
+
 export function getStoredAuth(): StoredAuth | null {
-  const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as StoredAuth;
-  } catch {
-    return null;
-  }
+  return currentAuth;
 }
 
 export function setStoredAuth(auth: StoredAuth | null) {
-  if (auth) {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth));
-  } else {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  }
+  currentAuth = auth;
 }
 
 export const axiosClient = axios.create({

@@ -94,4 +94,10 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
     }
+
+    @Override
+    @Transactional
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
 }

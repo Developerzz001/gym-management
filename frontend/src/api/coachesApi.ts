@@ -48,6 +48,28 @@ export function useUpdateCoachMutation() {
   });
 }
 
+export function useActivateCoachMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const response = await axiosClient.patch<ApiResponse<CoachResponse>>(`/coaches/${id}/activate`);
+      return response.data.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['coaches'] }),
+  });
+}
+
+export function useDeactivateCoachMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const response = await axiosClient.patch<ApiResponse<CoachResponse>>(`/coaches/${id}/deactivate`);
+      return response.data.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['coaches'] }),
+  });
+}
+
 export function useDeleteCoachMutation() {
   const queryClient = useQueryClient();
   return useMutation({

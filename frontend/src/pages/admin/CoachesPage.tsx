@@ -4,9 +4,11 @@ import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { useCoachesQuery, useDeleteCoachMutation } from '@/api/coachesApi';
+import { useActivateCoachMutation, useCoachesQuery, useDeactivateCoachMutation, useDeleteCoachMutation } from '@/api/coachesApi';
 import { CoachFormDialog } from './CoachFormDialog';
 import type { CoachResponse } from '@/types';
 
@@ -17,9 +19,13 @@ export function CoachesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [selected, setSelected] = useState<CoachResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CoachResponse | null>(null);
+  const [activateTarget, setActivateTarget] = useState<CoachResponse | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<CoachResponse | null>(null);
 
   const { data, isLoading } = useCoachesQuery(keyword, page, pageSize);
   const deleteMutation = useDeleteCoachMutation();
+  const activateMutation = useActivateCoachMutation();
+  const deactivateMutation = useDeactivateCoachMutation();
 
   const columns: GridColDef<CoachResponse>[] = [
     { field: 'firstName', headerName: 'First Name', flex: 1 },
@@ -29,10 +35,11 @@ export function CoachesPage() {
     { field: 'experienceYears', headerName: 'Experience (yrs)', width: 140 },
     {
       field: 'active', headerName: 'Status', width: 110,
-      renderCell: (params) => <Chip size="small" label={params.value ? 'Active' : 'Inactive'} color={params.value ? 'success' : 'default'} />,
+      valueGetter: (_value, row) => row.active ? 'Active' : 'Inactive',
+      renderCell: (params) => <Chip size="small" label={params.row.active ? 'Active' : 'Inactive'} color={params.row.active ? 'success' : 'default'} />,
     },
     {
-      field: 'actions', headerName: 'Actions', width: 110, sortable: false,
+      field: 'actions', headerName: 'Actions', width: 145, sortable: false,
       renderCell: (params) => (
         <Box>
           <Tooltip title="Edit">
@@ -45,6 +52,19 @@ export function CoachesPage() {
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Tooltip>
+          {params.row.active ? (
+            <Tooltip title="Deactivate">
+              <IconButton size="small" onClick={() => setDeactivateTarget(params.row)}>
+                <BlockIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Activate">
+              <IconButton size="small" onClick={() => setActivateTarget(params.row)}>
+                <CheckCircleIcon fontSize="small" color="success" />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       ),
     },
@@ -82,6 +102,22 @@ export function CoachesPage() {
         onClose={() => setDeleteTarget(null)}
         confirmColor="error"
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+      />
+      <ConfirmDialog
+        open={!!deactivateTarget}
+        title="Deactivate Coach"
+        message={`Deactivate ${deactivateTarget?.firstName} ${deactivateTarget?.lastName}? They will no longer be able to log in.`}
+        onClose={() => setDeactivateTarget(null)}
+        confirmColor="error"
+        onConfirm={() => deactivateTarget && deactivateMutation.mutate(deactivateTarget.id)}
+      />
+      <ConfirmDialog
+        open={!!activateTarget}
+        title="Activate Coach"
+        message={`Activate ${activateTarget?.firstName} ${activateTarget?.lastName}? They will be able to log in again.`}
+        onClose={() => setActivateTarget(null)}
+        confirmColor="primary"
+        onConfirm={() => activateTarget && activateMutation.mutate(activateTarget.id)}
       />
     </Box>
   );

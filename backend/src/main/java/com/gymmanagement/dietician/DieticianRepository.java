@@ -12,7 +12,7 @@ public interface DieticianRepository extends JpaRepository<Dietician, Long> {
 
     Optional<Dietician> findByUserId(Long userId);
 
-    @Query("select d from Dietician d where :keyword is null or " +
+    @Query("select d from Dietician d where " +
             "lower(d.user.firstName) like lower(concat('%', :keyword, '%')) or " +
             "lower(d.user.lastName) like lower(concat('%', :keyword, '%')) or " +
             "lower(d.user.email) like lower(concat('%', :keyword, '%'))")

@@ -4,9 +4,11 @@ import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { useDieticiansQuery, useDeleteDieticianMutation } from '@/api/dieticiansApi';
+import { useActivateDieticianMutation, useDeactivateDieticianMutation, useDieticiansQuery, useDeleteDieticianMutation } from '@/api/dieticiansApi';
 import { DieticianFormDialog } from './DieticianFormDialog';
 import type { DieticianResponse } from '@/types';
 
@@ -17,9 +19,13 @@ export function DieticiansPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [selected, setSelected] = useState<DieticianResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DieticianResponse | null>(null);
+  const [activateTarget, setActivateTarget] = useState<DieticianResponse | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<DieticianResponse | null>(null);
 
   const { data, isLoading } = useDieticiansQuery(keyword, page, pageSize);
   const deleteMutation = useDeleteDieticianMutation();
+  const activateMutation = useActivateDieticianMutation();
+  const deactivateMutation = useDeactivateDieticianMutation();
 
   const columns: GridColDef<DieticianResponse>[] = [
     { field: 'firstName', headerName: 'First Name', flex: 1 },
@@ -29,10 +35,11 @@ export function DieticiansPage() {
     { field: 'experienceYears', headerName: 'Experience (yrs)', width: 140 },
     {
       field: 'active', headerName: 'Status', width: 110,
-      renderCell: (params) => <Chip size="small" label={params.value ? 'Active' : 'Inactive'} color={params.value ? 'success' : 'default'} />,
+      valueGetter: (_value, row) => row.active ? 'Active' : 'Inactive',
+      renderCell: (params) => <Chip size="small" label={params.row.active ? 'Active' : 'Inactive'} color={params.row.active ? 'success' : 'default'} />,
     },
     {
-      field: 'actions', headerName: 'Actions', width: 110, sortable: false,
+      field: 'actions', headerName: 'Actions', width: 145, sortable: false,
       renderCell: (params) => (
         <Box>
           <Tooltip title="Edit">
@@ -45,6 +52,19 @@ export function DieticiansPage() {
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Tooltip>
+          {params.row.active ? (
+            <Tooltip title="Deactivate">
+              <IconButton size="small" onClick={() => setDeactivateTarget(params.row)}>
+                <BlockIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Activate">
+              <IconButton size="small" onClick={() => setActivateTarget(params.row)}>
+                <CheckCircleIcon fontSize="small" color="success" />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       ),
     },
@@ -82,6 +102,22 @@ export function DieticiansPage() {
         onClose={() => setDeleteTarget(null)}
         confirmColor="error"
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+      />
+      <ConfirmDialog
+        open={!!deactivateTarget}
+        title="Deactivate Dietician"
+        message={`Deactivate ${deactivateTarget?.firstName} ${deactivateTarget?.lastName}? They will no longer be able to log in.`}
+        onClose={() => setDeactivateTarget(null)}
+        confirmColor="error"
+        onConfirm={() => deactivateTarget && deactivateMutation.mutate(deactivateTarget.id)}
+      />
+      <ConfirmDialog
+        open={!!activateTarget}
+        title="Activate Dietician"
+        message={`Activate ${activateTarget?.firstName} ${activateTarget?.lastName}? They will be able to log in again.`}
+        onClose={() => setActivateTarget(null)}
+        confirmColor="primary"
+        onConfirm={() => activateTarget && activateMutation.mutate(activateTarget.id)}
       />
     </Box>
   );

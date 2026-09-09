@@ -5,6 +5,7 @@ import com.gymmanagement.common.exception.DuplicateResourceException;
 import com.gymmanagement.common.exception.ResourceNotFoundException;
 import com.gymmanagement.dietician.dto.DieticianRequest;
 import com.gymmanagement.dietician.dto.DieticianResponse;
+import com.gymmanagement.dietician.dto.DieticianProfileRequest;
 import com.gymmanagement.user.Role;
 import com.gymmanagement.user.User;
 import com.gymmanagement.user.UserRepository;
@@ -81,6 +82,24 @@ public class DieticianServiceImpl implements DieticianService {
 
     @Override
     @Transactional
+    public DieticianResponse activateDietician(Long id) {
+        Dietician dietician = getDieticianEntityById(id);
+        dietician.getUser().setActive(true);
+        userRepository.save(dietician.getUser());
+        return dieticianMapper.toResponse(dietician);
+    }
+
+    @Override
+    @Transactional
+    public DieticianResponse deactivateDietician(Long id) {
+        Dietician dietician = getDieticianEntityById(id);
+        dietician.getUser().setActive(false);
+        userRepository.save(dietician.getUser());
+        return dieticianMapper.toResponse(dietician);
+    }
+
+    @Override
+    @Transactional
     public void deleteDietician(Long id) {
         Dietician dietician = getDieticianEntityById(id);
         dieticianRepository.delete(dietician);
@@ -93,8 +112,36 @@ public class DieticianServiceImpl implements DieticianService {
     }
 
     @Override
+    public DieticianResponse getDieticianByUserId(Long userId) {
+        return dieticianMapper.toResponse(getDieticianEntityByUserId(userId));
+    }
+
+    @Override
+    @Transactional
+    public DieticianResponse updateOwnProfile(Long userId, DieticianProfileRequest request) {
+        Dietician dietician = getDieticianEntityByUserId(userId);
+        User user = dietician.getUser();
+        if (!user.getEmail().equalsIgnoreCase(request.getEmail()) && userRepository.existsByEmailIgnoreCase(request.getEmail())) {
+            throw new DuplicateResourceException("A user with email '" + request.getEmail() + "' already exists");
+        }
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setEmail(request.getEmail());
+        user.setMobileNumber(request.getMobileNumber());
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        userRepository.save(user);
+        dietician.setSpecialization(request.getSpecialization());
+        dietician.setExperienceYears(request.getExperienceYears());
+        dietician.setBio(request.getBio());
+        return dieticianMapper.toResponse(dieticianRepository.save(dietician));
+    }
+
+    @Override
     public PageResponse<DieticianResponse> getDieticians(String keyword, int page, int size) {
-        Page<Dietician> dieticians = dieticianRepository.search(keyword, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<Dietician> dieticians = dieticianRepository.search(keyword == null ? "" : keyword,
+                PageRequest.of(page, size, Sort.by("id").descending()));
         return PageResponse.from(dieticians.map(dieticianMapper::toResponse));
     }
 

@@ -12,7 +12,7 @@ public interface FitnessCoachRepository extends JpaRepository<FitnessCoach, Long
 
     Optional<FitnessCoach> findByUserId(Long userId);
 
-    @Query("select c from FitnessCoach c where :keyword is null or " +
+    @Query("select c from FitnessCoach c where " +
             "lower(c.user.firstName) like lower(concat('%', :keyword, '%')) or " +
             "lower(c.user.lastName) like lower(concat('%', :keyword, '%')) or " +
             "lower(c.user.email) like lower(concat('%', :keyword, '%'))")

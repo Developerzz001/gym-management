@@ -37,6 +37,7 @@ import { clearCredentials } from '@/features/auth/authSlice';
 import { getStoredAuth, axiosClient } from '@/api/axiosClient';
 import { useMarkNotificationReadMutation, useNotificationsQuery, useUnreadNotificationCountQuery } from '@/api/notificationsApi';
 import { FloatingAskBot } from '@/components/chat/FloatingAskBot';
+import { useMyProfileImageQuery } from '@/api/profileApi';
 
 const drawerWidth = 260;
 
@@ -83,12 +84,16 @@ export function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { firstName, lastName, role } = useAppSelector((state) => state.auth);
+  const canLoadProfileImage = role === 'CLIENT' || role === 'FITNESS_COACH' || role === 'DIETICIAN';
+  const { data: profileImage } = useMyProfileImageQuery(canLoadProfileImage);
+  const profileImageUrl = profileImage;
   const { data: unreadCount } = useUnreadNotificationCountQuery();
   const { data: notificationsPage, isLoading: notificationsLoading } = useNotificationsQuery(0, 10);
   const markAsReadMutation = useMarkNotificationReadMutation();
 
   const navItems = (role && NAV_ITEMS[role]) || [];
   const notificationsOpen = Boolean(notificationsAnchorEl);
+
 
   const handleLogout = async () => {
     const auth = getStoredAuth();
@@ -212,13 +217,14 @@ export function MainLayout() {
             )}
           </Menu>
           <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ ml: 1 }}>
-            <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main' }}>
+            <Avatar src={profileImageUrl} sx={{ width: 34, height: 34, bgcolor: 'primary.main' }}>
               {firstName?.[0]}
               {lastName?.[0]}
             </Avatar>
           </IconButton>
           <Menu anchorEl={anchorEl} open={!!anchorEl} onClose={() => setAnchorEl(null)}>
             <MenuItem disabled>{firstName} {lastName}</MenuItem>
+            {role !== 'ADMIN' && <MenuItem onClick={() => { setAnchorEl(null); navigate('/profile'); }}>My Profile</MenuItem>}
             <Divider />
             <MenuItem onClick={handleLogout}>
               <LogoutIcon fontSize="small" sx={{ mr: 1 }} /> Logout

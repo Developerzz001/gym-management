@@ -17,20 +17,24 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import type { ClientResponse } from '@/types';
-import { useRegisterClientMutation, useUpdateClientMutation, type ClientRequest } from '@/api/clientsApi';
+import { useConvertInquiryMutation, useRegisterClientMutation, useRegisterInquiryMutation, useUpdateClientMutation, type ClientRequest } from '@/api/clientsApi';
 import { extractErrorMessage } from '@/api/axiosClient';
 
 interface ClientFormDialogProps {
   open: boolean;
   onClose: () => void;
   client?: ClientResponse | null;
+  inquiry?: boolean;
+  conversion?: boolean;
 }
 
-export function ClientFormDialog({ open, onClose, client }: ClientFormDialogProps) {
+export function ClientFormDialog({ open, onClose, client, inquiry = false, conversion = false }: ClientFormDialogProps) {
   const isEdit = !!client;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const registerMutation = useRegisterClientMutation();
+  const inquiryMutation = useRegisterInquiryMutation();
   const updateMutation = useUpdateClientMutation();
+  const convertMutation = useConvertInquiryMutation();
 
   const validationSchema = useMemo(
     () =>
@@ -38,14 +42,14 @@ export function ClientFormDialog({ open, onClose, client }: ClientFormDialogProp
         firstName: Yup.string().required('First name is required'),
         lastName: Yup.string().required('Last name is required'),
         email: Yup.string().email('Enter a valid email').required('Email is required'),
-        password: isEdit
+        password: conversion ? Yup.string().min(6, 'Minimum 6 characters').required('Password is required') : inquiry ? Yup.string().notRequired() : isEdit
           ? Yup.string().min(6, 'Minimum 6 characters')
           : Yup.string().min(6, 'Minimum 6 characters').required('Password is required'),
         contactNumber: Yup.string().nullable(),
         heightCm: Yup.number().positive().nullable(),
         weightKg: Yup.number().positive().nullable(),
       }),
-    [isEdit]
+    [conversion, inquiry, isEdit]
   );
 
   const formik = useFormik<ClientRequest>({
@@ -54,7 +58,7 @@ export function ClientFormDialog({ open, onClose, client }: ClientFormDialogProp
       lastName: '',
       email: '',
       password: '',
-      active: true,
+      active: !inquiry,
       gender: undefined,
       dateOfBirth: '',
       heightCm: undefined,
@@ -74,10 +78,16 @@ export function ClientFormDialog({ open, onClose, client }: ClientFormDialogProp
     onSubmit: async (values) => {
       setErrorMessage(null);
       try {
-        if (isEdit && client) {
+        if (conversion && client) {
+          await convertMutation.mutateAsync({ id: client.id, payload: values });
+        } else if (isEdit && client) {
           await updateMutation.mutateAsync({ id: client.id, payload: values });
         } else {
-          await registerMutation.mutateAsync(values);
+          if (inquiry) {
+            await inquiryMutation.mutateAsync(values);
+          } else {
+            await registerMutation.mutateAsync(values);
+          }
         }
         onClose();
       } catch (error) {
@@ -114,11 +124,11 @@ export function ClientFormDialog({ open, onClose, client }: ClientFormDialogProp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, open]);
 
-  const isSubmitting = registerMutation.isPending || updateMutation.isPending;
+  const isSubmitting = registerMutation.isPending || inquiryMutation.isPending || updateMutation.isPending || convertMutation.isPending;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{isEdit ? 'Update Client' : 'Register New Client'}</DialogTitle>
+      <DialogTitle>{conversion ? 'Convert Inquiry to Client' : isEdit ? 'Update Client' : inquiry ? 'Register New Inquiry' : 'Register New Client'}</DialogTitle>
       <form onSubmit={formik.handleSubmit}>
         <DialogContent dividers>
           {errorMessage && <Alert severity="error" sx={{ mb: 2 }}>{errorMessage}</Alert>}
@@ -139,12 +149,12 @@ export function ClientFormDialog({ open, onClose, client }: ClientFormDialogProp
                 onChange={formik.handleChange} error={formik.touched.email && !!formik.errors.email}
                 helperText={formik.touched.email && formik.errors.email} />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            {(!inquiry || conversion) && <Grid size={{ xs: 12, sm: 6 }}>
               <TextField fullWidth label={isEdit ? 'New Password (optional)' : 'Password'} type="password" name="password"
                 value={formik.values.password} onChange={formik.handleChange}
                 error={formik.touched.password && !!formik.errors.password}
                 helperText={formik.touched.password && formik.errors.password} />
-            </Grid>
+            </Grid>}
             <Grid size={{ xs: 12, sm: 4 }}>
               <TextField select fullWidth label="Gender" name="gender" value={formik.values.gender ?? ''} onChange={formik.handleChange}>
                 <MenuItem value="MALE">Male</MenuItem>
@@ -201,7 +211,7 @@ export function ClientFormDialog({ open, onClose, client }: ClientFormDialogProp
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained" disabled={isSubmitting}>
-            {isEdit ? 'Update Client' : 'Register Client'}
+            {conversion ? 'Convert to Client' : isEdit ? 'Update Client' : inquiry ? 'Register Inquiry' : 'Register Client'}
           </Button>
         </DialogActions>
       </form>

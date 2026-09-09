@@ -28,6 +28,7 @@ import { ClientDashboardPage } from '@/pages/client/ClientDashboardPage';
 import { MyWorkoutPage } from '@/pages/client/MyWorkoutPage';
 import { MyDietPage } from '@/pages/client/MyDietPage';
 import { MyProgressPage } from '@/pages/client/MyProgressPage';
+import { ProfilePage } from '@/pages/misc/ProfilePage';
 
 function homePathForRole(role: string | null): string {
   switch (role) {
@@ -59,6 +60,17 @@ export default function App() {
       </Route>
 
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute allowedRoles={['CLIENT', 'FITNESS_COACH', 'DIETICIAN']}>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<ProfilePage />} />
+      </Route>
 
       <Route
         element={

@@ -4,6 +4,7 @@ import com.gymmanagement.common.dto.ApiResponse;
 import com.gymmanagement.common.dto.PageResponse;
 import com.gymmanagement.dietician.dto.DieticianRequest;
 import com.gymmanagement.dietician.dto.DieticianResponse;
+import com.gymmanagement.dietician.dto.DieticianProfileRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import com.gymmanagement.user.UserRepository;
 
 @RestController
 @RequestMapping("/v1/dieticians")
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class DieticianController {
 
     private final DieticianService dieticianService;
+    private final UserRepository userRepository;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -35,6 +39,20 @@ public class DieticianController {
         return ApiResponse.success("Dietician updated successfully", dieticianService.updateDietician(id, request));
     }
 
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Activate a dietician account")
+    public ApiResponse<DieticianResponse> activateDietician(@PathVariable Long id) {
+        return ApiResponse.success("Dietician activated successfully", dieticianService.activateDietician(id));
+    }
+
+    @PatchMapping("/{id}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Deactivate a dietician account")
+    public ApiResponse<DieticianResponse> deactivateDietician(@PathVariable Long id) {
+        return ApiResponse.success("Dietician deactivated successfully", dieticianService.deactivateDietician(id));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a dietician")
@@ -48,6 +66,21 @@ public class DieticianController {
     @Operation(summary = "Get dietician by id")
     public ApiResponse<DieticianResponse> getDietician(@PathVariable Long id) {
         return ApiResponse.success(dieticianService.getDieticianById(id));
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('DIETICIAN')")
+    public ApiResponse<DieticianResponse> getMyProfile(Authentication authentication) {
+        Long userId = userRepository.findByEmailIgnoreCase(authentication.getName()).orElseThrow().getId();
+        return ApiResponse.success(dieticianService.getDieticianByUserId(userId));
+    }
+
+    @PutMapping("/me")
+    @PreAuthorize("hasRole('DIETICIAN')")
+    public ApiResponse<DieticianResponse> updateMyProfile(Authentication authentication,
+                                                          @Valid @RequestBody DieticianProfileRequest request) {
+        Long userId = userRepository.findByEmailIgnoreCase(authentication.getName()).orElseThrow().getId();
+        return ApiResponse.success("Profile updated successfully", dieticianService.updateOwnProfile(userId, request));
     }
 
     @GetMapping

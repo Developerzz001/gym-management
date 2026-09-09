@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level [%t] [%X{requestId:-}] %logger{36} - %msg%n</Property>
+        <Property name="LOG_DIR">${sys:LOG_DIR:-logs}</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+        <RollingFile name="RollingFile"
+                     fileName="${LOG_DIR}/gym-management.log"
+                     filePattern="${LOG_DIR}/archive/gym-management-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="25 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="14"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="com.gymmanagement" level="debug"/>
+        <Logger name="org.hibernate.SQL" level="warn"/>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+    </Loggers>
+</Configuration>

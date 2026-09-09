@@ -2,6 +2,7 @@ package com.gymmanagement.membership;
 
 import com.gymmanagement.client.Client;
 import com.gymmanagement.client.ClientService;
+import com.gymmanagement.client.RegistrationType;
 import com.gymmanagement.common.exception.ResourceNotFoundException;
 import com.gymmanagement.membership.dto.AssignMembershipRequest;
 import com.gymmanagement.membership.dto.MembershipResponse;
@@ -28,6 +29,9 @@ public class MembershipServiceImpl implements MembershipService {
     @Transactional
     public MembershipResponse assignMembership(AssignMembershipRequest request) {
         Client client = clientService.getClientEntityById(request.getClientId());
+                if (client.getRegistrationType() == RegistrationType.INQUIRY) {
+                        throw new IllegalArgumentException("Membership can only be assigned to a registered client");
+                }
         MembershipPlan plan = membershipPlanService.getPlanEntityById(request.getMembershipPlanId());
 
         Membership membership = Membership.builder()
@@ -37,7 +41,9 @@ public class MembershipServiceImpl implements MembershipService {
                 .endDate(request.getStartDate().plusDays(plan.getDurationDays()))
                 .status(MembershipStatus.ACTIVE)
                 .build();
-        return membershipMapper.toResponse(membershipRepository.save(membership));
+        Membership saved = membershipRepository.save(membership);
+        client.getUser().setActive(true);
+        return membershipMapper.toResponse(saved);
     }
 
     @Override

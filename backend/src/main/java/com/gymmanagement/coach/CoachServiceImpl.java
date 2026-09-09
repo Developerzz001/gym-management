@@ -2,6 +2,7 @@ package com.gymmanagement.coach;
 
 import com.gymmanagement.coach.dto.CoachRequest;
 import com.gymmanagement.coach.dto.CoachResponse;
+import com.gymmanagement.coach.dto.CoachProfileRequest;
 import com.gymmanagement.common.dto.PageResponse;
 import com.gymmanagement.common.exception.DuplicateResourceException;
 import com.gymmanagement.common.exception.ResourceNotFoundException;
@@ -81,6 +82,24 @@ public class CoachServiceImpl implements CoachService {
 
     @Override
     @Transactional
+    public CoachResponse activateCoach(Long id) {
+        FitnessCoach coach = getCoachEntityById(id);
+        coach.getUser().setActive(true);
+        userRepository.save(coach.getUser());
+        return coachMapper.toResponse(coach);
+    }
+
+    @Override
+    @Transactional
+    public CoachResponse deactivateCoach(Long id) {
+        FitnessCoach coach = getCoachEntityById(id);
+        coach.getUser().setActive(false);
+        userRepository.save(coach.getUser());
+        return coachMapper.toResponse(coach);
+    }
+
+    @Override
+    @Transactional
     public void deleteCoach(Long id) {
         FitnessCoach coach = getCoachEntityById(id);
         coachRepository.delete(coach);
@@ -93,8 +112,36 @@ public class CoachServiceImpl implements CoachService {
     }
 
     @Override
+    public CoachResponse getCoachByUserId(Long userId) {
+        return coachMapper.toResponse(getCoachEntityByUserId(userId));
+    }
+
+    @Override
+    @Transactional
+    public CoachResponse updateOwnProfile(Long userId, CoachProfileRequest request) {
+        FitnessCoach coach = getCoachEntityByUserId(userId);
+        User user = coach.getUser();
+        if (!user.getEmail().equalsIgnoreCase(request.getEmail()) && userRepository.existsByEmailIgnoreCase(request.getEmail())) {
+            throw new DuplicateResourceException("A user with email '" + request.getEmail() + "' already exists");
+        }
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setEmail(request.getEmail());
+        user.setMobileNumber(request.getMobileNumber());
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        userRepository.save(user);
+        coach.setSpecialization(request.getSpecialization());
+        coach.setExperienceYears(request.getExperienceYears());
+        coach.setBio(request.getBio());
+        return coachMapper.toResponse(coachRepository.save(coach));
+    }
+
+    @Override
     public PageResponse<CoachResponse> getCoaches(String keyword, int page, int size) {
-        Page<FitnessCoach> coaches = coachRepository.search(keyword, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<FitnessCoach> coaches = coachRepository.search(keyword == null ? "" : keyword,
+                PageRequest.of(page, size, Sort.by("id").descending()));
         return PageResponse.from(coaches.map(coachMapper::toResponse));
     }
 

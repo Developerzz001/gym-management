@@ -6,6 +6,7 @@ import com.gymmanagement.client.Client;
 import com.gymmanagement.client.ClientMapper;
 import com.gymmanagement.client.ClientRepository;
 import com.gymmanagement.client.ClientService;
+import com.gymmanagement.client.RegistrationType;
 import com.gymmanagement.client.dto.ClientResponse;
 import com.gymmanagement.coach.CoachService;
 import com.gymmanagement.coach.FitnessCoach;
@@ -32,6 +33,9 @@ public class AssignmentServiceImpl implements AssignmentService {
     @Override
     public ClientResponse assignCoach(AssignCoachRequest request) {
         Client client = clientService.getClientEntityById(request.getClientId());
+        if (client.getRegistrationType() == RegistrationType.INQUIRY) {
+            throw new IllegalArgumentException("An inquiry must be registered as a client before assignment");
+        }
         FitnessCoach coach = coachService.getCoachEntityById(request.getCoachId());
         client.setAssignedCoach(coach);
         client = clientRepository.save(client);
@@ -43,6 +47,9 @@ public class AssignmentServiceImpl implements AssignmentService {
     @Override
     public ClientResponse assignDietician(AssignDieticianRequest request) {
         Client client = clientService.getClientEntityById(request.getClientId());
+        if (client.getRegistrationType() == RegistrationType.INQUIRY) {
+            throw new IllegalArgumentException("An inquiry must be registered as a client before assignment");
+        }
         Dietician dietician = dieticianService.getDieticianEntityById(request.getDieticianId());
         client.setAssignedDietician(dietician);
         client = clientRepository.save(client);

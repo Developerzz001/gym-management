@@ -64,7 +64,10 @@ export function useAssignMembershipMutation() {
       const response = await axiosClient.post<ApiResponse<MembershipResponse>>('/memberships/assign', payload);
       return response.data.data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['memberships'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['memberships'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+    },
   });
 }
 

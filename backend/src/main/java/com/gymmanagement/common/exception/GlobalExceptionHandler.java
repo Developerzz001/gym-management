@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -46,6 +47,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
+        log.warn("Authentication failed: method={} path={}", request.getMethod(), request.getRequestURI());
         return buildResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password", request, null);
     }
 
@@ -56,6 +58,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        log.warn("Authorization failed: method={} path={}", request.getMethod(), request.getRequestURI());
         return buildResponse(HttpStatus.FORBIDDEN, "You do not have permission to perform this action", request, null);
     }
 
@@ -65,6 +68,7 @@ public class GlobalExceptionHandler {
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errors.put(error.getField(), error.getDefaultMessage());
         }
+        log.warn("Request validation failed: path={} fields={}", request.getRequestURI(), errors.keySet());
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .success(false)
                 .status(HttpStatus.BAD_REQUEST.value())
@@ -74,6 +78,12 @@ public class GlobalExceptionHandler {
                 .validationErrors(errors)
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMostSpecificCause().getMessage(), request, null);
     }
 
     @ExceptionHandler(Exception.class)
