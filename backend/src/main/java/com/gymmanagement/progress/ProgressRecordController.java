@@ -23,7 +23,7 @@ public class ProgressRecordController {
     private final ProgressRecordService progressRecordService;
 
     @PostMapping
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Add a new progress record for a client")
     public ApiResponse<ProgressRecordResponse> add(Authentication authentication, @Valid @RequestBody ProgressRecordRequest request) {
@@ -31,7 +31,7 @@ public class ProgressRecordController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @Operation(summary = "Update an existing progress record")
     public ApiResponse<ProgressRecordResponse> update(Authentication authentication, @PathVariable Long id,
                                                        @Valid @RequestBody ProgressRecordRequest request) {

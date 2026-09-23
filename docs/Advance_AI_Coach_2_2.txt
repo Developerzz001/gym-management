@@ -1,0 +1,463 @@
+Act as a Principal AI Architect, Solution Architect, Fitness Domain Expert, and Senior Full Stack Engineer.
+
+My Gym Management System already contains member management, memberships, attendance, workout plans, diet plans, progress tracking, payments, notifications, reporting, and other core gym modules.
+
+I currently have a basic AI Assistant.
+
+I want to upgrade it into an enterprise-grade Advanced AI Fitness Coach that provides personalized guidance based on actual member data stored within the application.
+
+The solution must be secure, scalable, role-based, and capable of generating intelligent recommendations using historical and real-time fitness data.
+
+==================================================
+ADVANCED AI COACH
+==================================================
+
+Create a complete AI Fitness Coaching platform.
+
+The AI Coach must act like a virtual personal trainer, nutritionist, fitness consultant, and progress analyst.
+
+The AI must use actual gym management data and not provide generic responses.
+
+==================================================
+AI DATA ACCESS
+==================================================
+
+The AI Coach should have access to authorized member data including:
+
+Profile Data:
+- Name
+- Age
+- Gender
+- Height
+- Weight
+- BMI
+- Fitness Goals
+- Membership Type
+
+Attendance Data:
+- Daily Attendance
+- Monthly Attendance
+- Attendance Consistency
+- Workout Frequency
+
+Workout Data:
+- Assigned Workout Plans
+- Exercise History
+- Exercise Completion
+- Training Intensity
+- Workout Adherence
+
+Diet Data:
+- Assigned Diet Plans
+- Meal Tracking
+- Calorie Targets
+- Nutrition History
+
+Progress Data:
+- Weight Records
+- BMI History
+- Body Fat Percentage
+- Muscle Mass
+- Measurement Records
+- Goal Completion Status
+
+Membership Data:
+- Active Membership
+- Membership Usage
+- Membership Renewal History
+
+==================================================
+PERSONALIZED FITNESS COACHING
+==================================================
+
+The AI should provide personalized recommendations.
+
+Examples:
+
+Weight Loss Goal:
+- Calorie recommendations
+- Exercise suggestions
+- Progress coaching
+
+Muscle Gain Goal:
+- Workout recommendations
+- Protein intake suggestions
+- Recovery guidance
+
+Endurance Goal:
+- Cardio recommendations
+- Training schedules
+- Progress monitoring
+
+General Fitness Goal:
+- Balanced fitness recommendations
+- Habit building advice
+
+Responses must be based on actual member metrics and history.
+
+==================================================
+AI WORKOUT GENERATOR
+==================================================
+
+Generate personalized workout plans.
+
+Inputs:
+
+- Current Weight
+- Fitness Goal
+- Experience Level
+- Age
+- Injuries
+- Workout Frequency
+- Available Equipment
+
+Generate:
+
+- Weekly Workout Plan
+- Daily Exercise Plan
+- Sets
+- Repetitions
+- Rest Times
+- Progression Strategy
+
+Support levels:
+
+- Beginner
+- Intermediate
+- Advanced
+
+Support goals:
+
+- Weight Loss
+- Weight Gain
+- Muscle Building
+- Fat Loss
+- Strength Training
+- Athletic Conditioning
+
+==================================================
+AI DIET COACH
+==================================================
+
+Generate personalized nutrition guidance.
+
+Analyze:
+
+- Current Weight
+- Goal Weight
+- BMI
+- Activity Level
+- Dietary Preferences
+
+Generate:
+
+- Daily Calories
+- Protein Targets
+- Carbohydrate Targets
+- Fat Targets
+- Hydration Targets
+
+Suggest:
+
+- Meal Timing
+- Healthy Alternatives
+- Supplement Recommendations
+- Nutritional Improvements
+
+==================================================
+PROGRESS ANALYSIS ENGINE
+==================================================
+
+Create intelligent progress analysis.
+
+Analyze:
+
+- Weight Trends
+- BMI Trends
+- Attendance Trends
+- Workout Compliance
+- Diet Compliance
+
+Generate:
+
+Weekly Summary:
+
+- Achievements
+- Missed Targets
+- Recommendations
+
+Monthly Summary:
+
+- Progress Percentage
+- Goal Achievement Status
+- Risk Areas
+- Suggested Improvements
+
+==================================================
+GOAL TRACKING AI
+==================================================
+
+Allow members to create fitness goals.
+
+Examples:
+
+- Lose 10 kg
+- Gain 5 kg muscle
+- Reduce body fat by 8%
+- Improve attendance consistency
+- Complete 100 workouts
+
+AI should:
+
+- Monitor progress
+- Predict completion dates
+- Identify risks
+- Recommend corrective actions
+
+==================================================
+AI ALERTS & INSIGHTS
+==================================================
+
+Create proactive AI-generated alerts.
+
+Detect:
+
+Poor Attendance:
+- No attendance for several days
+
+Workout Inconsistency:
+- Missed assigned workouts
+
+Membership Inactivity:
+- Low gym usage
+
+Weight Gain Risk:
+- Negative progress trend
+
+Goal Failure Risk:
+- Falling behind targets
+
+Generate recommendations automatically.
+
+==================================================
+NATURAL LANGUAGE FITNESS ASSISTANT
+==================================================
+
+Members should be able to ask questions naturally.
+
+Examples:
+
+How much weight have I lost this year?
+
+Show my attendance trend.
+
+Am I following my workout plan properly?
+
+Why am I not reaching my goal?
+
+How many calories should I consume daily?
+
+What exercises should I focus on this month?
+
+Who is my assigned coach?
+
+What is my BMI trend?
+
+AI should analyze the actual database records before answering.
+
+==================================================
+AI COACH DASHBOARD
+==================================================
+
+Create dedicated AI insights dashboard.
+
+Member Dashboard:
+
+Display:
+
+- Fitness Score
+- Goal Progress
+- Attendance Consistency
+- Workout Completion %
+- Diet Compliance Score
+- Progress Trends
+- AI Recommendations
+
+Coach Dashboard:
+
+Display:
+
+- Client Risks
+- Progress Summary
+- Client Performance
+- Attendance Issues
+- Goal Achievement Metrics
+
+Admin Dashboard:
+
+Display:
+
+- Overall Fitness Trends
+- Most Successful Programs
+- Branch-Level Insights
+- Retention Predictions
+
+==================================================
+FITNESS SCORING ENGINE
+==================================================
+
+Develop AI-based fitness scoring.
+
+Calculate:
+
+- Attendance Score
+- Diet Compliance Score
+- Workout Compliance Score
+- Goal Progress Score
+
+Generate:
+
+Overall Fitness Score:
+0 - 100
+
+Categories:
+
+- Excellent
+- Good
+- Average
+- Needs Improvement
+
+Show score trend history.
+
+==================================================
+COACH ASSISTANT FEATURES
+==================================================
+
+Provide AI tools for trainers.
+
+Features:
+
+- Workout recommendations
+- Client progress analysis
+- Risk identification
+- Session recommendations
+- Performance insights
+
+Allow coaches to review and approve AI-generated plans before assigning them.
+
+==================================================
+AI ARCHITECTURE
+==================================================
+
+Implement Retrieval Augmented Generation (RAG).
+
+Architecture:
+
+User Question
+     →
+AI Service
+     →
+Secure Data Retrieval
+     →
+Context Builder
+     →
+LLM Processing
+     →
+Personalized Response
+
+Requirements:
+
+- AI must use actual gym data.
+- AI must not hallucinate missing information.
+- Responses must clearly mention data sources used.
+- Respect role-based permissions.
+
+==================================================
+SECURITY REQUIREMENTS
+==================================================
+
+The AI must only access authorized data.
+
+Examples:
+
+Member:
+- Own data only
+
+Coach:
+- Assigned clients only
+
+Branch Manager:
+- Branch data only
+
+Admin:
+- Organization-wide data
+
+Prevent unauthorized data exposure through AI responses.
+
+==================================================
+ANALYTICS & PREDICTIONS
+==================================================
+
+Generate predictive insights.
+
+Predict:
+
+- Membership Renewal Probability
+- Client Dropout Risk
+- Attendance Risk
+- Goal Achievement Probability
+
+Show confidence scores.
+
+Generate recommended interventions.
+
+==================================================
+NOTIFICATIONS
+==================================================
+
+Generate AI-powered notifications.
+
+Examples:
+
+- Goal milestone achieved
+- Attendance drop detected
+- Weight trend warning
+- Membership usage warning
+- Progress stagnation detected
+
+Provide actionable recommendations.
+
+==================================================
+FRONTEND REQUIREMENTS
+==================================================
+
+Create complete screens for:
+
+1. AI Fitness Coach Chat
+2. AI Insights Dashboard
+3. Goal Management
+4. Progress Analytics
+5. Fitness Score Dashboard
+6. Coach AI Assistant
+7. AI Recommendation Center
+
+Features:
+
+- Modern Fitness UI
+- Chat Interface
+- Trend Visualizations
+- Goal Progress Indicators
+- Interactive Charts
+- Mobile Responsive Design
+- Dark Mode Support
+
+==================================================
+DELIVERABLES
+==================================================
+
+Provide:
+
+1. Complete AI Architecture
+2. Database Design Changes
+3. RAG Design
+4. Prompt 

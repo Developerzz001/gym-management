@@ -1,0 +1,8 @@
+| Role | Responsibility |
+| `SUPER_ADMIN` | Manages organizations; views branches, organization/branch dashboards, views organization reports, reports, and settings |
+| `ORGANIZATION_ADMIN` | Manages branches and branch managers; views organization reports and settings |
+| `BRANCH_MANAGER` | Manages branch staff, can Handles clients, inquiries, billing, and invoices, handles transfers, branch dashboard, and settings |
+| `RECEPTIONIST` | Handles clients, inquiries, billing, and invoices |
+| `COACH` | Manages assigned clients, exercises, workout plans, and training sessions |
+| `DIETICIAN` | Manages diet plans, supplements, and medicines |
+| `CLIENT` | Views personal workouts, diet, progress, invoices, notifications, and profile |

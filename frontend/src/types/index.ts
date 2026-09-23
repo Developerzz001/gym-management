@@ -1,6 +1,83 @@
 // Shared TypeScript types mirroring backend DTOs
 
-export type Role = 'ADMIN' | 'FITNESS_COACH' | 'DIETICIAN' | 'CLIENT';
+export type Role = 'SUPER_ADMIN' | 'ORGANIZATION_ADMIN' | 'BRANCH_MANAGER' | 'COACH' |
+  'RECEPTIONIST' | 'ADMIN' | 'FITNESS_COACH' | 'DIETICIAN' | 'CLIENT';
+
+export type EntityStatus = 'ACTIVE' | 'INACTIVE';
+
+export interface OrganizationResponse {
+  id: number;
+  code: string;
+  name: string;
+  ownerName: string;
+  contactNumber?: string;
+  email: string;
+  address?: string;
+  status: EntityStatus;
+  createdDate: string;
+  updatedDate?: string;
+}
+
+export interface BranchResponse {
+  id: number;
+  organizationId: number;
+  organizationName: string;
+  branchCode: string;
+  branchName: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
+  contactNumber?: string;
+  email?: string;
+  managerId?: number;
+  managerName?: string;
+  status: EntityStatus;
+  createdDate: string;
+  updatedDate?: string;
+}
+
+export interface BranchSettingsResponse {
+  branchId: number;
+  workingHours: string;
+  timezone: string;
+  membershipRules?: string;
+  notificationPreferences?: string;
+  attendanceRules?: string;
+}
+
+export interface BranchDashboardResponse {
+  branchId: number;
+  branchName: string;
+  totalMembers: number;
+  activeMembers: number;
+  newMembers: number;
+  expiringMemberships: number;
+  dailyRevenue: number;
+  monthlyRevenue: number;
+  attendanceToday: number;
+  activeCoaches: number;
+  activeDieticians: number;
+}
+
+export interface BranchPerformanceResponse {
+  branchId: number;
+  branchName: string;
+  members: number;
+  revenue: number;
+  attendance: number;
+  performanceScore: number;
+}
+
+export interface OrganizationDashboardResponse {
+  organizationId: number;
+  organizationName: string;
+  totalBranches: number;
+  totalMembers: number;
+  totalRevenue: number;
+  branches: BranchPerformanceResponse[];
+}
 
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 
@@ -33,13 +110,91 @@ export type MealType =
   | 'EVENING_SNACK'
   | 'DINNER';
 
-export type MembershipStatus = 'ACTIVE' | 'EXPIRED';
+export type MembershipStatus = 'ACTIVE' | 'EXPIRED' | 'SUSPENDED';
 
 export type NotificationType =
   | 'WORKOUT_ASSIGNED'
   | 'DIET_UPDATED'
   | 'SESSION_SCHEDULED'
-  | 'MEMBERSHIP_EXPIRY';
+  | 'MEMBERSHIP_EXPIRY'
+  | 'INVOICE_CREATED'
+  | 'PAYMENT_RECEIVED'
+  | 'PARTIAL_PAYMENT_RECEIVED'
+  | 'BALANCE_PAYMENT_COMPLETED'
+  | 'PAYMENT_OVERDUE'
+  | 'MEMBERSHIP_RENEWED';
+
+export type InvoiceStatus = 'PENDING' | 'PARTIALLY_PAID' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+export type InvoiceType = 'MEMBERSHIP' | 'MEMBERSHIP_RENEWAL' | 'PERSONAL_TRAINING' | 'SUPPLEMENT_PURCHASE';
+export type PaymentMethod = 'CASH' | 'UPI' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'NET_BANKING';
+
+export interface PaymentTransactionResponse {
+  id: number;
+  paidAmount: number;
+  transactionType: 'PAYMENT' | 'REFUND' | 'WAIVER';
+  status: string;
+  paymentMethod?: PaymentMethod;
+  transactionReference?: string;
+  remarks?: string;
+  paymentDate: string;
+  createdBy?: string;
+}
+
+export interface InvoiceResponse {
+  id: number;
+  invoiceNumber: string;
+  clientId: number;
+  clientName: string;
+  invoiceType: InvoiceType;
+  membershipPlanId?: number;
+  membershipPlanName?: string;
+  membershipDiscountId?: number;
+  membershipDiscountName?: string;
+  membershipDiscountPercentage?: number;
+  generatedMembershipId?: number;
+  serviceStartDate?: string;
+  sessionCount?: number;
+  purchaseDate?: string;
+  description: string;
+  totalAmount: number;
+  tax: number;
+  discount: number;
+  finalAmount: number;
+  amountPaid: number;
+  balanceAmount: number;
+  status: InvoiceStatus;
+  dueDate: string;
+  createdAt: string;
+  paymentHistory: PaymentTransactionResponse[];
+}
+
+export interface AttendanceResponse {
+  id: number;
+  clientId: number;
+  clientName: string;
+  checkInAt: string;
+  checkOutAt?: string;
+  durationMinutes?: number;
+}
+
+export interface AdminDashboardResponse {
+  totalRevenue: number;
+  monthlyRevenue: number;
+  todayRevenue: number;
+  outstandingPayments: number;
+  overduePayments: number;
+  collectionEfficiencyPercent: number;
+  activeMembers: number;
+  newMembers: number;
+  renewals: number;
+  expiringMemberships: number;
+  todayAttendance: number;
+  monthlyAttendance: number;
+  peakUsageHours: Array<{ hour: number; checkIns: number }>;
+  sessionsConducted: number;
+  topPerformingCoaches: Array<{ staffId: number; name: string; completedActivities: number }>;
+  topPerformingDieticians: Array<{ staffId: number; name: string; completedActivities: number }>;
+}
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -63,6 +218,8 @@ export interface LoginResponse {
   lastName: string;
   email: string;
   role: Role;
+  organizationId?: number;
+  branchId?: number;
   accessToken: string;
   refreshToken: string;
   tokenType: string;
@@ -74,7 +231,13 @@ export interface UserResponse {
   lastName: string;
   email: string;
   mobileNumber?: string;
+  shiftStartTime?: string;
+  shiftEndTime?: string;
   role: Role;
+  organizationId?: number;
+  organizationName?: string;
+  branchId?: number;
+  branchName?: string;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -83,6 +246,9 @@ export interface UserResponse {
 export interface ClientResponse {
   id: number;
   userId: number;
+  organizationId?: number;
+  branchId?: number;
+  branchName?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -247,7 +413,17 @@ export interface MembershipPlanResponse {
   name: string;
   durationDays: number;
   fees: number;
+  extraDurationDays: number;
   description?: string;
+}
+
+export interface MembershipDiscountResponse {
+  id: number;
+  name: string;
+  percentage: number;
+  extraFreeDays: number;
+  description?: string;
+  active: boolean;
 }
 
 export interface MembershipResponse {

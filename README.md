@@ -1,19 +1,24 @@
 # Gym Management System
 
-A full-stack Gym Management System built for **local development**.
+A full-stack, role-based gym operations platform with member and staff management, memberships,
+billing, attendance, coaching, nutrition, reporting, notifications, and multi-branch tenancy.
 
 - **Backend**: Java 21, Spring Boot 3, Spring Security (JWT + Refresh Tokens, RBAC), Spring Data JPA
-  (Hibernate), SQL Server, MapStruct, Lombok, Bean Validation, springdoc-openapi (Swagger UI), Maven.
-- **Frontend**: React 18, TypeScript, Vite, Material UI, Redux Toolkit, TanStack React Query, Axios,
-  React Router v6, Formik + Yup.
-- **Database**: SQL Server.
+  (Hibernate), PostgreSQL, MapStruct, Lombok, Bean Validation, springdoc-openapi (Swagger UI), Maven.
+- **Frontend**: React 18, TypeScript 6, Vite 5, Material UI 6, Redux Toolkit, TanStack React Query,
+  Axios, React Router 7, Formik + Yup.
+- **Database**: PostgreSQL.
+
+For the code-grounded architecture, module inventory, end-to-end flows, current limitations, and
+recommended product roadmap, see [Project Documentation](docs/PROJECT_DOCUMENTATION.md).
 
 ## Project Structure
 
 ```
 gym-management/
 ├── backend/   # Spring Boot REST API (com.gymmanagement)
-└── frontend/  # React + TypeScript SPA
+├── frontend/  # React + TypeScript SPA
+└── docs/      # Architecture, rollout notes, and reviewed SQL scripts
 ```
 
 ## Prerequisites
@@ -23,36 +28,34 @@ gym-management/
 | JDK              | 21        |
 | Maven            | 3.9+      |
 | Node.js          | 18+ (20 recommended) |
-| SQL Server       | 2019+ (or SQL Server container) |
+| PostgreSQL       | 15+       |
 
 ## 1. Database Setup
 
-Run SQL Server locally, e.g. via Docker:
+Run PostgreSQL locally, e.g. via Docker:
 
 ```powershell
-docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong@Passw0rd" `
-  -p 1433:1433 --name gym-sqlserver -d mcr.microsoft.com/mssql/server:2022-latest
+docker run --name gym-postgres `
+  -e POSTGRES_DB=gym_management `
+  -e POSTGRES_USER=postgres `
+  -e POSTGRES_PASSWORD=12345 `
+  -p 5432:5432 -d postgres:16
 ```
 
-Then create the database (any SQL client, e.g. `sqlcmd` or Azure Data Studio):
-
-```sql
-CREATE DATABASE gym_management;
-```
-
-The backend uses Hibernate `ddl-auto: update`, so all tables (`users`, `clients`, `fitness_coaches`,
-`dieticians`, `membership_plans`, `memberships`, `exercises`, `workout_plans`,
-`workout_plan_details`, `training_sessions`, `diet_plans`, `diet_plan_details`, `supplements`,
-`medicines`, `progress_records`, `notifications`, `refresh_tokens`) are created automatically on
-first run — no manual schema scripts required for local dev.
+The backend uses Hibernate `ddl-auto: update`, so the core, billing, attendance, notification,
+organization, and branch tables are created automatically for a fresh local database. Existing
+databases should review and apply [Phase 2 SQL](docs/sql/phase2.sql) and
+[Phase 2.1 multi-branch SQL](docs/sql/phase2_1_multi_branch.sql), including the documented tenant
+backfill, before production deployment. Production should use versioned migrations and
+`ddl-auto: validate`.
 
 Connection settings are in [backend/src/main/resources/application.yml](backend/src/main/resources/application.yml).
 Override via environment variables or edit directly:
 
 ```yaml
-spring.datasource.url: jdbc:sqlserver://localhost:1433;databaseName=gym_management;encrypt=true;trustServerCertificate=true
-spring.datasource.username: sa
-spring.datasource.password: YourStrong@Passw0rd
+spring.datasource.url: jdbc:postgresql://localhost:5432/gym_management
+spring.datasource.username: postgres
+spring.datasource.password: 12345
 ```
 
 ## 2. Run the Backend
@@ -67,14 +70,16 @@ The API starts on **http://localhost:8080/api**.
 - Swagger UI: http://localhost:8080/api/swagger-ui.html
 - OpenAPI JSON: http://localhost:8080/api/v3/api-docs
 
-On first startup, a default **ADMIN** account is seeded automatically:
+On first startup, only the default **SUPER_ADMIN** account is seeded automatically:
 
 ```
-email:    admin@gymmanagement.com
-password: Admin@123
+SUPER_ADMIN: superadmin@gymmanagement.com / SuperAdmin@123
 ```
 
-Use this account to log in and create coaches, dieticians, and clients from the Admin UI.
+Use `SUPER_ADMIN` to create organizations. Organization codes are generated automatically in
+sequence (`ORG_01`, `ORG_02`, and so on), and the supplied organization email and initial password
+become its `ORGANIZATION_ADMIN` login. Legacy `ADMIN` accounts can still be created through the
+user management API for backward-compatible gym operations screens.
 
 ## 3. Run the Frontend
 
@@ -89,14 +94,19 @@ The app starts on **http://localhost:5173** and proxies `/api/*` requests to the
 
 ## 4. Typical Local Workflow
 
-1. Log in as `admin@gymmanagement.com`.
-2. Create Fitness Coaches and Dieticians (Admin → Coaches / Dieticians).
-3. Register Clients (Admin → Clients) and assign a coach/dietician to each.
-4. Log out and log in as a coach/dietician (password set during creation, default `Coach@123` /
-   `Diet@123` if left blank) to create workout plans, diet plans, supplements, medicines and
-   schedule sessions.
-5. Log in as a client (password set during registration, default `Client@123` if left blank) to view
-   the dashboard, workout, diet and progress pages.
+1. Log in as `superadmin@gymmanagement.com` and create an organization. The organization email and
+  initial password can then be used to log in as its `ORGANIZATION_ADMIN`.
+2. As the organization admin, create branches. Branch codes are generated per organization in
+  sequence (`BR_01`, `BR_02`, and so on).
+3. From Branch Managers, create one `BRANCH_MANAGER` login for each branch.
+4. As a branch manager, create `COACH`, `DIETICIAN`, and `RECEPTIONIST` logins for that branch.
+5. Organization admins and branch managers can transfer members and staff within their
+  organization. Super admins can view all organizations, branches, dashboards, and reports but
+  cannot perform transfers.
+
+The multi-branch implementation supports platform-scoped `SUPER_ADMIN`, `ORGANIZATION_ADMIN`,
+`BRANCH_MANAGER`, `RECEPTIONIST`, and `COACH` users. Tenant users require organization/branch scope
+data; only the platform-level `SUPER_ADMIN` is seeded automatically.
 
 ## Authentication Flow
 
@@ -107,8 +117,9 @@ The app starts on **http://localhost:5173** and proxies `/api/*` requests to the
 - `POST /api/v1/auth/logout` — revokes the given refresh token.
 - `POST /api/v1/auth/change-password` — changes the authenticated user's password.
 
-Roles: `ADMIN`, `FITNESS_COACH`, `DIETICIAN`, `CLIENT` (enforced via `@PreAuthorize` on every
-controller endpoint).
+Roles: `SUPER_ADMIN`, `ORGANIZATION_ADMIN`, `BRANCH_MANAGER`, `RECEPTIONIST`, `COACH`, `DIETICIAN`,
+and `CLIENT`. Legacy `ADMIN` and `FITNESS_COACH` roles remain supported during migration. Backend
+method checks and tenant-aware service/repository filters are the authorization boundary.
 
 ## Backend Package Structure
 
@@ -117,7 +128,9 @@ com.gymmanagement
 ├── auth            # login/refresh/logout/change-password
 ├── security         # JWT filter, JwtService, UserDetails, SecurityConfig
 ├── user             # User entity/roles, admin user CRUD
-├── admin             # cross-module assignment endpoints (assign/change coach & dietician)
+├── admin            # cross-module assignment endpoints (assign/change coach & dietician)
+├── organization     # organization lifecycle and tenant ownership
+├── branch / audit   # branch settings, transfers, and branch audit history
 ├── coach / dietician # profile CRUD (creates linked User with role)
 ├── client            # client profile + medical details
 ├── workout           # Exercise master, WorkoutPlan/Detail, TrainingSession
@@ -125,9 +138,26 @@ com.gymmanagement
 ├── supplement / medicine
 ├── progress          # date-wise body metrics, BMI auto-calculated
 ├── membership        # MembershipPlan, Membership (assign/renew)
+├── billing           # invoices, payments, waivers, refunds, PDF/email delivery
+├── attendance        # check-in/out and usage reports
+├── dashboard         # admin, branch, and organization aggregates
 ├── notification      # in-app notification records
 └── common            # BaseEntity, exceptions, ApiResponse/PageResponse, config (security, swagger, auditing)
 ```
+
+## Implemented Operations
+
+- **Billing:** invoice creation, partial/full payments, balance waivers, refunds, audit history,
+  invoice PDF generation, optional email delivery, and client-owned invoice views.
+- **Attendance:** membership-aware check-in/check-out, one active visit per member, attendance
+  history, usage summaries, and peak-hour reporting.
+- **Dashboards:** server-side admin, branch, and organization KPI aggregates.
+- **Multi-branch:** organization/branch management, branch settings, tenant-scoped access, member and
+  staff transfers, immutable branch snapshots on operational records, and branch reports/exports.
+
+See [Project Documentation](docs/PROJECT_DOCUMENTATION.md),
+[Phase 2](docs/sql/phase2.sql), and [Phase 2.1](docs/PHASE_2_1_MULTI_BRANCH.md) for API contracts and
+rollout details.
 
 ## Notes on Local-Dev Optimizations
 
@@ -156,8 +186,9 @@ If `mealTime` is not provided, defaults are used:
 
 ### Configure provider
 
-By default, WhatsApp is in log mode (`provider: log`) so local development works without external
-credentials.
+The checked-in configuration enables the Twilio provider but leaves credentials empty. For local
+development without external delivery, set `app.whatsapp.provider: log`; use environment variables
+for real provider credentials.
 
 Set these in `backend/src/main/resources/application.yml` or environment variables:
 
@@ -188,7 +219,7 @@ scalability, and operations.
 
 - Frontend (React build): S3 static hosting + CloudFront CDN + ACM TLS certificate.
 - Backend (Spring Boot): ECS Fargate service behind an Application Load Balancer (ALB).
-- Database: Amazon RDS for SQL Server in private subnets.
+- Database: Amazon RDS for PostgreSQL in private subnets.
 - Container registry: Amazon ECR.
 - Secrets and config: AWS Secrets Manager + ECS task environment variables.
 - DNS: Route 53.
@@ -219,16 +250,16 @@ Use separate resources or at least separate ECS services/RDS instances and secre
 - NAT gateway
 3. Private subnets:
 - ECS tasks
-- RDS SQL Server
+- RDS PostgreSQL
 4. Security groups:
 - ALB SG: allow 80/443 from internet.
 - ECS SG: allow backend port (8080) only from ALB SG.
-- RDS SG: allow 1433 only from ECS SG.
+- RDS SG: allow 5432 only from ECS SG.
 5. Restrict IAM roles to least privilege for ECS task execution and app access to secrets.
 
-### 4. Database (RDS SQL Server)
+### 4. Database (RDS PostgreSQL)
 
-1. Create RDS SQL Server in private subnets (Multi-AZ recommended for prod).
+1. Create RDS PostgreSQL in private subnets (Multi-AZ recommended for prod).
 2. Create database `gym_management`.
 3. Store DB credentials in Secrets Manager.
 4. Update backend datasource values through environment variables.
@@ -342,6 +373,10 @@ $env:OPENAI_MAX_TOKENS="500"
 ```
 
 If `AI_ENABLED=false` or API key is missing, Ask AI returns a clear configuration error.
+
+The current endpoint is a general assistant and is not grounded in member records. The advanced,
+tenant-aware AI fitness coach described in [docs/Advance_AI_Coach_2_2.txt](docs/Advance_AI_Coach_2_2.txt)
+is a roadmap specification, not an implemented feature.
 
 Production guidance:
 

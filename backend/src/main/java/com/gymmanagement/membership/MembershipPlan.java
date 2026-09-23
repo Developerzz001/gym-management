@@ -32,6 +32,10 @@ public class MembershipPlan extends BaseEntity {
     @Column(name = "fees", nullable = false, precision = 10, scale = 2)
     private BigDecimal fees;
 
+    @Builder.Default
+    @Column(name = "extra_duration_days", nullable = false, columnDefinition = "integer default 0")
+    private Integer extraDurationDays = 0;
+
     @Column(name = "description", length = 500)
     private String description;
 }

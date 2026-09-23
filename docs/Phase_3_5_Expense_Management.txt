@@ -1,0 +1,611 @@
+Act as a Principal Solution Architect, Chartered Accountant Domain Expert, and Senior Full Stack Engineer.
+
+My Gym Management System already contains:
+
+- Authentication & Authorization
+- Multi Branch Support
+- Member Management
+- Coach Management
+- Dietician Management
+- Attendance Tracking
+- Membership Management
+- Payment Management
+- Invoice Management
+- Workout Plans
+- Diet Plans
+- Progress Tracking
+- Notifications
+- AI Coach
+- Reporting & Analytics
+
+I want to build a complete Accounts & Finance Management Module that can manage all gym financial operations.
+
+The system must support multi-branch accounting, financial reporting, payroll, vendor management, expense tracking, profitability analysis, and revenue management.
+
+Follow existing project architecture, coding standards, security model, RBAC, logging framework, audit design, and API conventions.
+
+==================================================
+MODULE 1 : EXPENSE MANAGEMENT
+==================================================
+
+Create a complete Expense Management module.
+
+Allow recording all business expenses.
+
+Requirements:
+
+Expense Categories (System Defined):
+
+- Maintenance
+- Equipment Purchase
+- Equipment Repair
+- Supplements Purchase
+- Merchandise Purchase
+- Rent
+- Electricity
+- Water
+- Internet
+- Marketing
+- Advertising
+- Staff Welfare
+- Cleaning
+- Training & Certification
+- Software Subscription
+- Transport
+- Salary Expenses
+- Miscellaneous
+
+Allow Custom Categories:
+
+Examples:
+
+- Treadmill Repair
+- Air Conditioner Service
+- Gym Renovation
+- Fitness Event Cost
+
+Expense Fields:
+
+- Expense Number
+- Branch
+- Date
+- Expense Category
+- Expense Type
+- Expense Amount
+- Tax Amount
+- Vendor
+- Payment Mode
+- Reference Number
+- Description
+- Bill Attachment
+- Approval Status
+- Approved By
+- Approved Date
+
+Approval Workflow:
+
+Submitted
+→ Approved
+→ Rejected
+
+Reports:
+
+- Daily Expenses
+- Monthly Expenses
+- Category Wise Expenses
+- Branch Wise Expenses
+- Vendor Wise Expenses
+
+==================================================
+MODULE 2 : PAYROLL & SALARY MANAGEMENT
+==================================================
+
+Create complete salary management.
+
+Supported Employees:
+
+- Coaches
+- Dieticians
+- Receptionists
+- Branch Managers
+- Admin Staff
+- Housekeeping Staff
+
+Salary Configuration:
+
+- Employee
+- Branch
+- Monthly Salary
+- Effective Date
+- Salary Type
+- Payment Frequency
+
+Salary Components:
+
+Earnings:
+- Basic Salary
+- Allowances
+- Incentives
+- Bonus
+- Overtime
+
+Deductions:
+- Tax
+- Advance Recovery
+- Penalties
+- Other Deductions
+
+Generated Fields:
+
+- Gross Salary
+- Total Deductions
+- Net Salary
+
+Salary Status:
+
+- Pending
+- Generated
+- Paid
+- Partially Paid
+
+Features:
+
+- Monthly Salary Generation
+- Salary Processing
+- Salary Payment Tracking
+- Salary Slip PDF
+- Salary History
+- Employee Salary Ledger
+
+==================================================
+MODULE 3 : COMMISSION & INCENTIVE MANAGEMENT
+==================================================
+
+Create trainer incentive system.
+
+Support:
+
+Membership Commission
+
+Example:
+Membership Sold = 10
+Commission = ₹500 Per Sale
+
+Personal Training Commission
+
+Example:
+PT Package Sold = ₹50,000
+Commission = 10%
+
+Supplement Sales Commission
+
+Referral Bonus
+
+Rules:
+
+- Fixed Amount
+- Percentage Based
+
+Reports:
+
+- Monthly Incentives
+- Employee Incentive History
+- Top Performers
+
+==================================================
+MODULE 4 : VENDOR MANAGEMENT
+==================================================
+
+Create Vendor Master.
+
+Vendor Types:
+
+- Equipment Suppliers
+- Supplement Suppliers
+- Service Providers
+- Maintenance Vendors
+- Merchandise Suppliers
+
+Store:
+
+- Vendor Code
+- Vendor Name
+- Contact Person
+- Mobile Number
+- Email
+- GST Number
+- PAN Number
+- Address
+- Bank Details
+- Vendor Status
+
+Features:
+
+- Vendor Creation
+- Vendor Update
+- Vendor Ledger
+- Vendor Payment Tracking
+- Outstanding Balance Tracking
+
+==================================================
+MODULE 5 : PURCHASE MANAGEMENT
+==================================================
+
+Implement complete purchase system.
+
+Process:
+
+Purchase Request
+→ Purchase Order
+→ Goods Receipt
+→ Invoice Verification
+→ Vendor Payment
+
+Purchase Order Fields:
+
+- PO Number
+- Vendor
+- Branch
+- Date
+- Item Details
+- Quantity
+- Unit Price
+- Tax
+- Total Amount
+
+Statuses:
+
+- Draft
+- Ordered
+- Partially Received
+- Received
+- Closed
+- Cancelled
+
+Reports:
+
+- Purchase Report
+- Vendor Purchase Report
+- Branch Purchase Report
+
+==================================================
+MODULE 6 : CASH FLOW MANAGEMENT
+==================================================
+
+Track all cash movements.
+
+Cash Inflows:
+
+- Membership Fees
+- Membership Renewals
+- Personal Training
+- Product Sales
+- Supplement Sales
+
+Cash Outflows:
+
+- Salaries
+- Rent
+- Utilities
+- Marketing
+- Maintenance
+- Purchases
+
+Create:
+
+Cash Transactions Register
+
+Fields:
+
+- Date
+- Branch
+- Transaction Type
+- Amount
+- Description
+- Reference
+
+Dashboard:
+
+- Cash In
+- Cash Out
+- Net Cash Flow
+
+==================================================
+MODULE 7 : PETTY CASH MANAGEMENT
+==================================================
+
+Create branch-wise petty cash.
+
+Examples:
+
+- Tea/Coffee
+- Cleaning Supplies
+- Local Travel
+- Small Repairs
+- Office Stationery
+
+Features:
+
+- Opening Balance
+- Expense Entry
+- Closing Balance
+- Daily Reconciliation
+
+Reports:
+
+- Daily Petty Cash Report
+- Monthly Petty Cash Report
+
+==================================================
+MODULE 8 : MEMBER OUTSTANDING MANAGEMENT
+==================================================
+
+Track unpaid dues.
+
+Examples:
+
+Membership Fee = ₹3000
+Paid = ₹2000
+Outstanding = ₹1000
+
+Features:
+
+- Outstanding Report
+- Due Date Tracking
+- Reminder Notifications
+- Overdue Analysis
+
+Statuses:
+
+- Pending
+- Partial
+- Paid
+- Overdue
+
+==================================================
+MODULE 9 : VENDOR OUTSTANDING MANAGEMENT
+==================================================
+
+Track supplier dues.
+
+Example:
+
+Invoice Amount = ₹100,000
+Paid = ₹70,000
+Outstanding = ₹30,000
+
+Features:
+
+- Vendor Ledger
+- Due Dates
+- Payment Reminders
+- Outstanding Reports
+
+==================================================
+MODULE 10 : FINANCIAL DASHBOARD
+==================================================
+
+Create Finance Dashboard.
+
+KPIs:
+
+Revenue:
+
+- Today's Revenue
+- Monthly Revenue
+- Annual Revenue
+
+Expenses:
+
+- Today's Expense
+- Monthly Expense
+- Annual Expense
+
+Profitability:
+
+- Net Profit
+- Gross Profit
+- Profit Margin %
+
+Liabilities:
+
+- Salary Outstanding
+- Vendor Outstanding
+- Member Outstanding
+
+Inventory:
+
+- Inventory Value
+- Dead Stock Value
+
+==================================================
+MODULE 11 : PROFIT & LOSS STATEMENT
+==================================================
+
+Generate automated P&L.
+
+Formula:
+
+Revenue
+(-) Expenses
+--------------------
+Net Profit
+
+View:
+
+- Monthly
+- Quarterly
+- Yearly
+- Branch Wise
+- Organization Wise
+
+==================================================
+MODULE 12 : BRANCH-WISE ACCOUNTING
+==================================================
+
+Every financial transaction must belong to a branch.
+
+Requirements:
+
+- Branch Revenue
+- Branch Expenses
+- Branch Payroll
+- Branch Profitability
+
+Allow consolidated organization reports.
+
+==================================================
+MODULE 13 : REPORTING
+==================================================
+
+Create report center.
+
+Financial Reports:
+
+- Revenue Report
+- Expense Report
+- Payroll Report
+- Vendor Report
+- Outstanding Report
+- Cash Flow Report
+- Profit & Loss Report
+- Branch Profitability Report
+
+Export Support:
+
+- PDF
+- Excel
+- CSV
+
+Filtering:
+
+- Date Range
+- Branch
+- Category
+- Employee
+- Vendor
+
+==================================================
+MODULE 14 : AUDIT LOGGING
+==================================================
+
+Track all financial changes.
+
+Examples:
+
+- Expense Created
+- Expense Updated
+- Salary Generated
+- Salary Paid
+- Vendor Payment Made
+- Purchase Order Approved
+
+Store:
+
+- User
+- Timestamp
+- Previous Value
+- New Value
+- Branch
+- Action Type
+
+==================================================
+MODULE 15 : NOTIFICATIONS
+==================================================
+
+Create automatic reminders.
+
+Salary:
+
+- Salary Due
+- Salary Paid
+
+Vendors:
+
+- Vendor Payment Due
+
+Members:
+
+- Membership Outstanding
+
+Management:
+
+- Budget Threshold Reached
+- Unusual Expense Alert
+
+Channels:
+
+- In-App
+- Email
+- WhatsApp
+
+==================================================
+ROLE BASED ACCESS
+==================================================
+
+SUPER_ADMIN
+
+- Full Access
+- All Financial Data
+
+ORGANIZATION_ADMIN
+
+- Organization Financial Access
+
+BRANCH_MANAGER
+
+- Branch Financial Access
+
+ACCOUNTANT
+
+- Finance Operations
+
+COACH
+
+- Own Salary & Incentive View Only
+
+DIETICIAN
+
+- Own Salary & Incentive View Only
+
+==================================================
+NON FUNCTIONAL REQUIREMENTS
+==================================================
+
+- Clean Architecture
+- SOLID Principles
+- CQRS where beneficial
+- Transaction Management
+- Optimized Queries
+- Pagination
+- Audit Trail
+- Unit Tests
+- Integration Tests
+- API Documentation
+- Validation
+- Exception Handling
+- Database Indexing
+- Multi-Branch Security
+
+==================================================
+DELIVERABLES
+==================================================
+
+Generate:
+
+1. Database Schema
+2. ER Diagram
+3. Entity Models
+4. DTO Design
+5. Security Design
+6. Backend APIs
+7. Frontend Screens
+8. Dashboard Design
+9. Report Design
+10. Validation Rules
+11. Test Cases
+12. Sequence Diagrams
+13. Migration Scripts
+14. Production Ready Implementation
+
+Implement module-by-module with enterprise-grade quality and scalability.

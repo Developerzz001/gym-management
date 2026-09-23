@@ -23,7 +23,9 @@ public interface ClientService {
 
     ClientResponse updateOwnProfile(Long userId, ClientProfileRequest request);
 
-    PageResponse<ClientResponse> getClients(String keyword, int page, int size);
+    void updateProfileImage(Long id, byte[] image, String contentType);
+
+    PageResponse<ClientResponse> getClients(String keyword, RegistrationType registrationType, int page, int size);
 
     ClientResponse convertInquiry(Long id, ClientRequest request);
 

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @Setter
@@ -21,7 +22,13 @@ public class UserResponse {
     private String lastName;
     private String email;
     private String mobileNumber;
+    private LocalTime shiftStartTime;
+    private LocalTime shiftEndTime;
     private Role role;
+    private Long organizationId;
+    private String organizationName;
+    private Long branchId;
+    private String branchName;
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

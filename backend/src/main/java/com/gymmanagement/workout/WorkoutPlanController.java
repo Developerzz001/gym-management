@@ -23,7 +23,7 @@ public class WorkoutPlanController {
     private final WorkoutPlanService workoutPlanService;
 
     @PostMapping
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a new workout plan for an assigned client")
     public ApiResponse<WorkoutPlanResponse> createPlan(Authentication authentication,
@@ -33,7 +33,7 @@ public class WorkoutPlanController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @Operation(summary = "Update an existing workout plan")
     public ApiResponse<WorkoutPlanResponse> updatePlan(Authentication authentication, @PathVariable Long id,
                                                         @Valid @RequestBody WorkoutPlanRequest request) {
@@ -42,7 +42,7 @@ public class WorkoutPlanController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @Operation(summary = "Delete a workout plan")
     public ApiResponse<Void> deletePlan(Authentication authentication, @PathVariable Long id) {
         workoutPlanService.deleteWorkoutPlan(authentication.getName(), id);
@@ -68,7 +68,7 @@ public class WorkoutPlanController {
     }
 
     @GetMapping("/my-plans")
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @Operation(summary = "Get all workout plans created by the currently logged-in coach")
     public ApiResponse<List<WorkoutPlanResponse>> getMyPlans(Authentication authentication) {
         return ApiResponse.success(workoutPlanService.getPlansByCoach(authentication.getName()));

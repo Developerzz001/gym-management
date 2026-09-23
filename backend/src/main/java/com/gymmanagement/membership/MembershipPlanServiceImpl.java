@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -25,6 +26,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
                 .name(request.getName())
                 .durationDays(request.getDurationDays())
                 .fees(request.getFees())
+                .extraDurationDays(orZero(request.getExtraDurationDays()))
                 .description(request.getDescription())
                 .build();
         return membershipPlanMapper.toResponse(membershipPlanRepository.save(plan));
@@ -37,6 +39,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
         plan.setName(request.getName());
         plan.setDurationDays(request.getDurationDays());
         plan.setFees(request.getFees());
+        plan.setExtraDurationDays(orZero(request.getExtraDurationDays()));
         plan.setDescription(request.getDescription());
         return membershipPlanMapper.toResponse(membershipPlanRepository.save(plan));
     }
@@ -58,5 +61,9 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
     public MembershipPlan getPlanEntityById(Long id) {
         return membershipPlanRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Membership Plan", "id", id));
+    }
+
+    private Integer orZero(Integer value) {
+        return value == null ? 0 : value;
     }
 }

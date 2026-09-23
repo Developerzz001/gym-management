@@ -33,6 +33,8 @@ public class JwtService {
             claims.put("role", principal.getRole());
             claims.put("userId", principal.getId());
             claims.put("fullName", principal.getFullName());
+            claims.put("organizationId", principal.getOrganizationId());
+            claims.put("branchId", principal.getBranchId());
         }
         return buildToken(claims, userDetails.getUsername(), accessTokenExpirationMs);
     }
@@ -68,7 +70,7 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        return username.equals(userDetails.getUsername()) && userDetails.isEnabled() && !isTokenExpired(token);
     }
 
     public boolean isTokenExpired(String token) {

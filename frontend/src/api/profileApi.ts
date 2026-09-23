@@ -1,15 +1,30 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from './axiosClient';
-import type { ApiResponse, ClientResponse, CoachResponse, DieticianResponse } from '@/types';
+import type { ApiResponse, ClientResponse, CoachResponse, DieticianResponse, Role, UserResponse } from '@/types';
 import type { ClientRequest } from './clientsApi';
 import type { CoachRequest } from './coachesApi';
 import type { DieticianRequest } from './dieticiansApi';
 
-export type ProfileResponse = ClientResponse | CoachResponse | DieticianResponse;
-export type ProfileRequest = ClientRequest | CoachRequest | DieticianRequest;
+export interface UserProfileRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  mobileNumber?: string;
+  password?: string;
+}
 
-export function useMyProfileQuery(role: 'CLIENT' | 'FITNESS_COACH' | 'DIETICIAN') {
-  const path = role === 'CLIENT' ? '/clients/me' : role === 'FITNESS_COACH' ? '/coaches/me' : '/dieticians/me';
+export type ProfileResponse = ClientResponse | CoachResponse | DieticianResponse | UserResponse;
+export type ProfileRequest = ClientRequest | CoachRequest | DieticianRequest | UserProfileRequest;
+
+function profilePath(role: Role) {
+  if (role === 'CLIENT') return '/clients/me';
+  if (role === 'FITNESS_COACH' || role === 'COACH') return '/coaches/me';
+  if (role === 'DIETICIAN') return '/dieticians/me';
+  return '/users/me';
+}
+
+export function useMyProfileQuery(role: Role) {
+  const path = profilePath(role);
   return useQuery({
     queryKey: ['profile', role],
     queryFn: async () => {
@@ -19,9 +34,9 @@ export function useMyProfileQuery(role: 'CLIENT' | 'FITNESS_COACH' | 'DIETICIAN'
   });
 }
 
-export function useUpdateMyProfileMutation(role: 'CLIENT' | 'FITNESS_COACH' | 'DIETICIAN') {
+export function useUpdateMyProfileMutation(role: Role) {
   const queryClient = useQueryClient();
-  const path = role === 'CLIENT' ? '/clients/me' : role === 'FITNESS_COACH' ? '/coaches/me' : '/dieticians/me';
+  const path = profilePath(role);
   return useMutation({
     mutationFn: async (payload: ProfileRequest) => {
       const response = await axiosClient.put<ApiResponse<ProfileResponse>>(path, payload);

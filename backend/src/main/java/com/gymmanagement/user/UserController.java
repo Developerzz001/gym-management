@@ -3,6 +3,7 @@ package com.gymmanagement.user;
 import com.gymmanagement.common.dto.ApiResponse;
 import com.gymmanagement.common.dto.PageResponse;
 import com.gymmanagement.user.dto.UserRequest;
+import com.gymmanagement.user.dto.UserProfileRequest;
 import com.gymmanagement.user.dto.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,8 +28,17 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping("/me")
+    public ApiResponse<UserResponse> getMyProfile() {
+        return ApiResponse.success(userService.getMyProfile());
+    }
+
+    @PutMapping("/me")
+    public ApiResponse<UserResponse> updateMyProfile(@Valid @RequestBody UserProfileRequest request) {
+        return ApiResponse.success("Profile updated successfully", userService.updateMyProfile(request));
+    }
+
     @GetMapping(value = "/me/profile-image", produces = { MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE, "image/webp" })
-    @PreAuthorize("hasAnyRole('CLIENT','FITNESS_COACH','DIETICIAN')")
     public ResponseEntity<byte[]> getMyProfileImage(Authentication authentication) {
         User user = userService.getUserEntityByEmail(authentication.getName());
         if (user.getProfileImage() == null || user.getProfileImageContentType() == null) {
@@ -40,7 +50,6 @@ public class UserController {
     }
 
     @PutMapping(value = "/me/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('CLIENT','FITNESS_COACH','DIETICIAN')")
     public ApiResponse<Void> uploadMyProfileImage(Authentication authentication,
                                                    @RequestParam("file") MultipartFile file) {
         if (file.isEmpty() || file.getSize() > 5 * 1024 * 1024) {
@@ -61,7 +70,7 @@ public class UserController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER')")
     @Operation(summary = "Create a new user")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
@@ -69,14 +78,14 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER')")
     @Operation(summary = "Update an existing user")
     public ApiResponse<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserRequest request) {
         return ApiResponse.success("User updated successfully", userService.updateUser(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER')")
     @Operation(summary = "Delete a user")
     public ApiResponse<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
@@ -84,14 +93,14 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER')")
     @Operation(summary = "Get user by id")
     public ApiResponse<UserResponse> getUser(@PathVariable Long id) {
         return ApiResponse.success(userService.getUserById(id));
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER')")
     @Operation(summary = "Search / list users with pagination")
     public ApiResponse<PageResponse<UserResponse>> getUsers(
             @RequestParam(required = false) String keyword,

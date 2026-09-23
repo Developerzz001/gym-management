@@ -22,7 +22,7 @@ public class MembershipPlanController {
     private final MembershipPlanService membershipPlanService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','BRANCH_MANAGER','RECEPTIONIST')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a new membership plan")
     public ApiResponse<MembershipPlanResponse> create(@Valid @RequestBody MembershipPlanRequest request) {
@@ -30,14 +30,14 @@ public class MembershipPlanController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','BRANCH_MANAGER','RECEPTIONIST')")
     @Operation(summary = "Update a membership plan")
     public ApiResponse<MembershipPlanResponse> update(@PathVariable Long id, @Valid @RequestBody MembershipPlanRequest request) {
         return ApiResponse.success("Membership plan updated successfully", membershipPlanService.updatePlan(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','BRANCH_MANAGER','RECEPTIONIST')")
     @Operation(summary = "Delete a membership plan")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         membershipPlanService.deletePlan(id);

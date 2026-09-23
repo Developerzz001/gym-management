@@ -62,21 +62,21 @@ public class CoachController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('ADMIN','FITNESS_COACH','COACH')")
     @Operation(summary = "Get fitness coach by id")
     public ApiResponse<CoachResponse> getCoach(@PathVariable Long id) {
         return ApiResponse.success(coachService.getCoachById(id));
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     public ApiResponse<CoachResponse> getMyProfile(Authentication authentication) {
         Long userId = userRepository.findByEmailIgnoreCase(authentication.getName()).orElseThrow().getId();
         return ApiResponse.success(coachService.getCoachByUserId(userId));
     }
 
     @PutMapping("/me")
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     public ApiResponse<CoachResponse> updateMyProfile(Authentication authentication,
                                                        @Valid @RequestBody CoachProfileRequest request) {
         Long userId = userRepository.findByEmailIgnoreCase(authentication.getName()).orElseThrow().getId();

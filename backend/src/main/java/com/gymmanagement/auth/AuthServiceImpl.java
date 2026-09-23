@@ -11,6 +11,7 @@ import com.gymmanagement.common.exception.UnauthorizedException;
 import com.gymmanagement.membership.Membership;
 import com.gymmanagement.membership.MembershipRepository;
 import com.gymmanagement.membership.MembershipStatus;
+import com.gymmanagement.organization.OrganizationStatus;
 import com.gymmanagement.security.JwtService;
 import com.gymmanagement.security.UserPrincipal;
 import com.gymmanagement.user.User;
@@ -102,6 +103,8 @@ public class AuthServiceImpl implements AuthService {
                 .lastName(user.getLastName())
                 .email(user.getEmail())
                 .role(user.getRole())
+                .organizationId(user.getOrganization() == null ? null : user.getOrganization().getId())
+                .branchId(user.getBranch() == null ? null : user.getBranch().getId())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -126,6 +129,9 @@ public class AuthServiceImpl implements AuthService {
     private void validateActiveUser(User user) {
         if (!user.isActive()) {
             throw new UnauthorizedException("Account is deactivated");
+        }
+        if (user.getOrganization() != null && user.getOrganization().getStatus() == OrganizationStatus.INACTIVE) {
+            throw new UnauthorizedException("Organization is deactivated");
         }
     }
 }

@@ -17,8 +17,9 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import type { ClientResponse } from '@/types';
-import { useConvertInquiryMutation, useRegisterClientMutation, useRegisterInquiryMutation, useUpdateClientMutation, type ClientRequest } from '@/api/clientsApi';
+import { useConvertInquiryMutation, useRegisterClientMutation, useRegisterInquiryMutation, useUpdateClientMutation, useUploadClientProfileImageMutation, type ClientRequest } from '@/api/clientsApi';
 import { extractErrorMessage } from '@/api/axiosClient';
+import { PhotoCapture } from '@/components/common/PhotoCapture';
 
 interface ClientFormDialogProps {
   open: boolean;
@@ -31,10 +32,13 @@ interface ClientFormDialogProps {
 export function ClientFormDialog({ open, onClose, client, inquiry = false, conversion = false }: ClientFormDialogProps) {
   const isEdit = !!client;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [createdClientId, setCreatedClientId] = useState<number | null>(null);
   const registerMutation = useRegisterClientMutation();
   const inquiryMutation = useRegisterInquiryMutation();
   const updateMutation = useUpdateClientMutation();
   const convertMutation = useConvertInquiryMutation();
+  const uploadImageMutation = useUploadClientProfileImageMutation();
 
   const validationSchema = useMemo(
     () =>
@@ -78,15 +82,26 @@ export function ClientFormDialog({ open, onClose, client, inquiry = false, conve
     onSubmit: async (values) => {
       setErrorMessage(null);
       try {
+        if (createdClientId && photoFile) {
+          await uploadImageMutation.mutateAsync({ id: createdClientId, file: photoFile });
+          onClose();
+          return;
+        }
         if (conversion && client) {
-          await convertMutation.mutateAsync({ id: client.id, payload: values });
+          const convertedClient = await convertMutation.mutateAsync({ id: client.id, payload: values });
+          if (photoFile) {
+            setCreatedClientId(convertedClient.id);
+            await uploadImageMutation.mutateAsync({ id: convertedClient.id, file: photoFile });
+          }
         } else if (isEdit && client) {
           await updateMutation.mutateAsync({ id: client.id, payload: values });
         } else {
-          if (inquiry) {
-            await inquiryMutation.mutateAsync(values);
-          } else {
-            await registerMutation.mutateAsync(values);
+          const createdClient = inquiry
+            ? await inquiryMutation.mutateAsync(values)
+            : await registerMutation.mutateAsync(values);
+          if (photoFile) {
+            setCreatedClientId(createdClient.id);
+            await uploadImageMutation.mutateAsync({ id: createdClient.id, file: photoFile });
           }
         }
         onClose();
@@ -97,6 +112,9 @@ export function ClientFormDialog({ open, onClose, client, inquiry = false, conve
   });
 
   useEffect(() => {
+    setPhotoFile(null);
+    setCreatedClientId(null);
+    setErrorMessage(null);
     if (client) {
       formik.setValues({
         firstName: client.firstName,
@@ -124,37 +142,48 @@ export function ClientFormDialog({ open, onClose, client, inquiry = false, conve
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, open]);
 
-  const isSubmitting = registerMutation.isPending || inquiryMutation.isPending || updateMutation.isPending || convertMutation.isPending;
+  const isSubmitting = registerMutation.isPending || inquiryMutation.isPending || updateMutation.isPending
+    || convertMutation.isPending || uploadImageMutation.isPending;
+  const showPhotoCapture = !isEdit || conversion;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogTitle>{conversion ? 'Convert Inquiry to Client' : isEdit ? 'Update Client' : inquiry ? 'Register New Inquiry' : 'Register New Client'}</DialogTitle>
       <form onSubmit={formik.handleSubmit}>
         <DialogContent dividers>
           {errorMessage && <Alert severity="error" sx={{ mb: 2 }}>{errorMessage}</Alert>}
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>Basic Information</Typography>
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField fullWidth label="First Name" name="firstName" value={formik.values.firstName}
-                onChange={formik.handleChange} error={formik.touched.firstName && !!formik.errors.firstName}
-                helperText={formik.touched.firstName && formik.errors.firstName} />
+            <Grid size={{ xs: 12, md: showPhotoCapture ? 9 : 12 }}>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="First Name" name="firstName" value={formik.values.firstName}
+                    onChange={formik.handleChange} error={formik.touched.firstName && !!formik.errors.firstName}
+                    helperText={formik.touched.firstName && formik.errors.firstName} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Last Name" name="lastName" value={formik.values.lastName}
+                    onChange={formik.handleChange} error={formik.touched.lastName && !!formik.errors.lastName}
+                    helperText={formik.touched.lastName && formik.errors.lastName} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label="Email" name="email" value={formik.values.email}
+                    onChange={formik.handleChange} error={formik.touched.email && !!formik.errors.email}
+                    helperText={formik.touched.email && formik.errors.email} />
+                </Grid>
+                {(!inquiry || conversion) && <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField fullWidth label={conversion ? 'Password' : isEdit ? 'New Password (optional)' : 'Password'} type="password" name="password"
+                    value={formik.values.password} onChange={formik.handleChange}
+                    error={formik.touched.password && !!formik.errors.password}
+                    helperText={formik.touched.password && formik.errors.password} />
+                </Grid>}
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField fullWidth label="Last Name" name="lastName" value={formik.values.lastName}
-                onChange={formik.handleChange} error={formik.touched.lastName && !!formik.errors.lastName}
-                helperText={formik.touched.lastName && formik.errors.lastName} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField fullWidth label="Email" name="email" value={formik.values.email}
-                onChange={formik.handleChange} error={formik.touched.email && !!formik.errors.email}
-                helperText={formik.touched.email && formik.errors.email} />
-            </Grid>
-            {(!inquiry || conversion) && <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField fullWidth label={isEdit ? 'New Password (optional)' : 'Password'} type="password" name="password"
-                value={formik.values.password} onChange={formik.handleChange}
-                error={formik.touched.password && !!formik.errors.password}
-                helperText={formik.touched.password && formik.errors.password} />
-            </Grid>}
+            {showPhotoCapture && (
+              <Grid size={{ xs: 12, md: 3 }}>
+                <PhotoCapture file={photoFile} onChange={setPhotoFile} disabled={isSubmitting} />
+              </Grid>
+            )}
             <Grid size={{ xs: 12, sm: 4 }}>
               <TextField select fullWidth label="Gender" name="gender" value={formik.values.gender ?? ''} onChange={formik.handleChange}>
                 <MenuItem value="MALE">Male</MenuItem>
@@ -211,7 +240,7 @@ export function ClientFormDialog({ open, onClose, client, inquiry = false, conve
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained" disabled={isSubmitting}>
-            {conversion ? 'Convert to Client' : isEdit ? 'Update Client' : inquiry ? 'Register Inquiry' : 'Register Client'}
+            {createdClientId ? 'Retry Photo Upload' : conversion ? 'Convert to Client' : isEdit ? 'Update Client' : inquiry ? 'Register Inquiry' : 'Register Client'}
           </Button>
         </DialogActions>
       </form>

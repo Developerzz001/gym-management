@@ -17,26 +17,28 @@ public class DataSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    private static final String DEFAULT_ADMIN_EMAIL = "admin@gymmanagement.com";
-    private static final String DEFAULT_ADMIN_PASSWORD = "Admin@123";
+    private static final String DEFAULT_SUPER_ADMIN_EMAIL = "superadmin@gymmanagement.com";
+    private static final String DEFAULT_SUPER_ADMIN_PASSWORD = "SuperAdmin@123";
 
     @Override
     public void run(String... args) {
-        if (userRepository.existsByEmailIgnoreCase(DEFAULT_ADMIN_EMAIL)) {
+        seedUser(DEFAULT_SUPER_ADMIN_EMAIL, DEFAULT_SUPER_ADMIN_PASSWORD, "Super", "Administrator", Role.SUPER_ADMIN);
+    }
+
+    private void seedUser(String email, String password, String firstName, String lastName, Role role) {
+        if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
             return;
         }
-        User admin = User.builder()
-                .firstName("System")
-                .lastName("Administrator")
-                .email(DEFAULT_ADMIN_EMAIL)
+        User user = User.builder()
+            .firstName(firstName)
+                .lastName(lastName)
+                .email(email)
                 .mobileNumber("0000000000")
-                .password(passwordEncoder.encode(DEFAULT_ADMIN_PASSWORD))
-                .role(Role.ADMIN)
+                .password(passwordEncoder.encode(password))
+                .role(role)
                 .active(true)
                 .build();
-        userRepository.save(admin);
-        log.info("==============================================================");
-        log.info("Default ADMIN account created -> email: {}", DEFAULT_ADMIN_EMAIL);
-        log.info("==============================================================");
+        userRepository.save(user);
+        log.info("Default {} account created -> email: {}", role, email);
     }
 }

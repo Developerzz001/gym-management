@@ -1,66 +1,55 @@
 import { Paper, Box, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import PeopleIcon from '@mui/icons-material/People';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import { PageHeader } from '@/components/common/PageHeader';
-import { useClientsQuery } from '@/api/clientsApi';
-import { useCoachesQuery } from '@/api/coachesApi';
-import { useDieticiansQuery } from '@/api/dieticiansApi';
-import { useMembershipPlansQuery } from '@/api/membershipsApi';
+import { useAdminDashboardQuery } from '@/api/dashboardApi';
 
-function StatCard({ label, value, icon, color }: { label: string; value: number | string; icon: React.ReactNode; color: string }) {
+const money = (value = 0) => new Intl.NumberFormat('en-IN', {
+  style: 'currency', currency: 'INR', maximumFractionDigits: 0,
+}).format(value);
+
+function StatCard({ label, value }: { label: string; value: number | string }) {
   return (
-    <Paper sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-      <Box
-        sx={{
-          width: 56,
-          height: 56,
-          borderRadius: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: `${color}.light`,
-          color: `${color}.dark`,
-        }}
-      >
-        {icon}
-      </Box>
-      <Box>
-        <Typography variant="h5" fontWeight={700}>
-          {value}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {label}
-        </Typography>
-      </Box>
+    <Paper sx={{ p: 2.5, minHeight: 96 }}>
+      <Typography variant="h5" fontWeight={700}>{value}</Typography>
+      <Typography variant="body2" color="text.secondary">{label}</Typography>
     </Paper>
   );
 }
 
 export function AdminDashboardPage() {
-  const { data: clients } = useClientsQuery('', 0, 1);
-  const { data: coaches } = useCoachesQuery('', 0, 1);
-  const { data: dieticians } = useDieticiansQuery('', 0, 1);
-  const { data: plans } = useMembershipPlansQuery();
+  const { data } = useAdminDashboardQuery();
+  const metrics: Array<[string, string | number]> = [
+    ['Total Revenue', money(data?.totalRevenue)],
+    ['This Month', money(data?.monthlyRevenue)],
+    ['Today', money(data?.todayRevenue)],
+    ['Outstanding', money(data?.outstandingPayments)],
+    ['Overdue', money(data?.overduePayments)],
+    ['Collection Efficiency', `${data?.collectionEfficiencyPercent ?? 0}%`],
+    ['Active Members', data?.activeMembers ?? 0],
+    ['New Members', data?.newMembers ?? 0],
+    ['Expiring (30 days)', data?.expiringMemberships ?? 0],
+    ["Today's Attendance", data?.todayAttendance ?? 0],
+    ['Monthly Attendance', data?.monthlyAttendance ?? 0],
+    ['Sessions Conducted', data?.sessionsConducted ?? 0],
+  ];
 
   return (
     <Box>
-      <PageHeader title="Admin Dashboard" subtitle="Overview of the gym management system" />
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCard label="Total Clients" value={clients?.totalElements ?? 0} icon={<PeopleIcon />} color="primary" />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCard label="Fitness Coaches" value={coaches?.totalElements ?? 0} icon={<FitnessCenterIcon />} color="success" />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCard label="Dieticians" value={dieticians?.totalElements ?? 0} icon={<RestaurantIcon />} color="warning" />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCard label="Membership Plans" value={plans?.length ?? 0} icon={<CardMembershipIcon />} color="info" />
-        </Grid>
+      <PageHeader title="Business Dashboard" subtitle="Revenue, membership, attendance, and staff performance" />
+      <Grid container spacing={2}>
+        {metrics.map(([label, value]) => <Grid key={label} size={{ xs: 12, sm: 6, md: 3 }}>
+          <StatCard label={label} value={value} />
+        </Grid>)}
+      </Grid>
+      <Grid container spacing={2} sx={{ mt: 1 }}>
+        <Grid size={{ xs: 12, md: 6 }}><Paper sx={{ p: 2.5 }}>
+          <Typography variant="h6">Top Coaches</Typography>
+          {data?.topPerformingCoaches.map((item) => <Typography key={item.staffId} sx={{ py: 0.75 }}>{item.name}: {item.completedActivities} completed sessions</Typography>)}
+        </Paper></Grid>
+        <Grid size={{ xs: 12, md: 6 }}><Paper sx={{ p: 2.5 }}>
+          <Typography variant="h6">Top Dieticians</Typography>
+          {data?.topPerformingDieticians.map((item) => <Typography key={item.staffId} sx={{ py: 0.75 }}>{item.name}: {item.completedActivities} plans</Typography>)}
+        </Paper></Grid>
       </Grid>
     </Box>
   );

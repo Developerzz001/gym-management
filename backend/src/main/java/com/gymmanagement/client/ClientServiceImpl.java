@@ -1,5 +1,7 @@
 package com.gymmanagement.client;
 
+import com.gymmanagement.branch.Branch;
+import com.gymmanagement.branch.BranchRepository;
 import com.gymmanagement.client.dto.ClientRequest;
 import com.gymmanagement.client.dto.ClientResponse;
 import com.gymmanagement.client.dto.ClientProfileRequest;
@@ -11,6 +13,7 @@ import com.gymmanagement.dietician.DieticianService;
 import com.gymmanagement.user.Role;
 import com.gymmanagement.user.User;
 import com.gymmanagement.user.UserRepository;
+import com.gymmanagement.security.TenantAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,6 +35,8 @@ public class ClientServiceImpl implements ClientService {
     private final PasswordEncoder passwordEncoder;
     private final CoachService coachService;
     private final DieticianService dieticianService;
+    private final BranchRepository branchRepository;
+    private final TenantAccessService tenantAccess;
 
     @Override
     @Transactional
@@ -52,6 +57,7 @@ public class ClientServiceImpl implements ClientService {
         if (userRepository.existsByEmailIgnoreCase(request.getEmail())) {
             throw new DuplicateResourceException("A user with email '" + request.getEmail() + "' already exists");
         }
+        Branch branch = resolveRegistrationBranch(request.getBranchId());
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -59,6 +65,8 @@ public class ClientServiceImpl implements ClientService {
                 .mobileNumber(request.getContactNumber())
                 .password(passwordEncoder.encode(request.getPassword() != null ? request.getPassword() : "Client@123"))
                 .role(Role.CLIENT)
+                .organization(branch == null ? null : branch.getOrganization())
+                .branch(branch)
                 .active(request.getActive() == null || request.getActive())
                 .build();
         user = userRepository.save(user);
@@ -140,7 +148,11 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public ClientResponse getClientById(Long id) {
-        return clientMapper.toResponse(getClientEntityById(id));
+        Client client = getClientEntityById(id);
+        if (client.getUser().getBranch() != null) {
+            tenantAccess.assertBranchAccess(client.getUser().getBranch());
+        }
+        return clientMapper.toResponse(client);
     }
 
     @Override
@@ -171,6 +183,18 @@ public class ClientServiceImpl implements ClientService {
         return clientMapper.toResponse(clientRepository.save(client));
     }
 
+    @Override
+    @Transactional
+    public void updateProfileImage(Long id, byte[] image, String contentType) {
+        Client client = getClientEntityById(id);
+        if (client.getUser().getBranch() != null) {
+            tenantAccess.assertBranchAccess(client.getUser().getBranch());
+        }
+        client.getUser().setProfileImage(image);
+        client.getUser().setProfileImageContentType(contentType);
+        userRepository.save(client.getUser());
+    }
+
     private void updateUserDetails(User user, String firstName, String lastName, String email,
                                    String mobileNumber, String password) {
         if (!user.getEmail().equalsIgnoreCase(email) && userRepository.existsByEmailIgnoreCase(email)) {
@@ -187,10 +211,37 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public PageResponse<ClientResponse> getClients(String keyword, int page, int size) {
-        Page<Client> clients = clientRepository.search(keyword == null ? "" : keyword,
-            PageRequest.of(page, size, Sort.by("id").descending()));
+    public PageResponse<ClientResponse> getClients(String keyword, RegistrationType registrationType, int page, int size) {
+        String search = keyword == null ? "" : keyword;
+        PageRequest pageable = PageRequest.of(page, Math.min(size, 100), Sort.by("id").descending());
+        User currentUser = tenantAccess.currentUser();
+        Page<Client> clients;
+        if (currentUser.getRole() == Role.SUPER_ADMIN || currentUser.getRole() == Role.ADMIN) {
+            clients = clientRepository.search(search, registrationType, pageable);
+        } else if (currentUser.getRole() == Role.ORGANIZATION_ADMIN) {
+            clients = clientRepository.searchByOrganization(currentUser.getOrganization().getId(), search, registrationType, pageable);
+        } else {
+            if (currentUser.getBranch() == null) {
+                throw new org.springframework.security.access.AccessDeniedException("Branch assignment is required");
+            }
+            clients = clientRepository.searchByBranch(currentUser.getBranch().getId(), search, registrationType, pageable);
+        }
         return PageResponse.from(clients.map(clientMapper::toResponse));
+    }
+
+    private Branch resolveRegistrationBranch(Long requestedBranchId) {
+        User currentUser = tenantAccess.currentUser();
+        if (requestedBranchId == null) {
+            if (currentUser.getRole() == Role.ADMIN) return null;
+            if (currentUser.getBranch() == null) {
+                throw new com.gymmanagement.common.exception.BadRequestException("branchId is required");
+            }
+            return currentUser.getBranch();
+        }
+        Branch branch = branchRepository.findById(requestedBranchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Branch", "id", requestedBranchId));
+        tenantAccess.assertBranchAccess(branch);
+        return branch;
     }
 
     @Override

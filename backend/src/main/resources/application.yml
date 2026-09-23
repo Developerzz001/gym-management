@@ -33,6 +33,15 @@ spring:
     default-property-inclusion: non_null
     time-zone: UTC
 
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:false}
+
   servlet:
     multipart:
       max-file-size: 10MB
@@ -76,6 +85,13 @@ app:
     diet-reminder-cron: 0 * * * * *
     coach-plan-reminder-cron: 0 0 8 * * *
     dietician-plan-reminder-cron: 0 15 8 * * *
+    billing-reminder-cron: ${BILLING_REMINDER_CRON:0 0 9 * * *}
+    membership-expiry-cron: ${MEMBERSHIP_EXPIRY_CRON:0 15 9 * * *}
+    email-enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
+    from-email: ${NOTIFICATION_FROM_EMAIL:noreply@gym.local}
+  billing:
+    invoice-prefix: ${INVOICE_PREFIX:GYM}
+    currency: ${BILLING_CURRENCY:INR}
   ai:
     enabled: ${AI_ENABLED:true}
     provider: ${AI_PROVIDER:openai}

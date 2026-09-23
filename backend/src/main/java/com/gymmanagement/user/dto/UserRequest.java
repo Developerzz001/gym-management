@@ -12,6 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalTime;
+
 @Getter
 @Setter
 @Builder
@@ -32,11 +34,19 @@ public class UserRequest {
     @Pattern(regexp = "^[0-9+\\-\\s]{7,20}$", message = "Mobile number is invalid")
     private String mobileNumber;
 
+    private LocalTime shiftStartTime;
+
+    private LocalTime shiftEndTime;
+
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 
     @NotNull(message = "Role is required")
     private Role role;
+
+    private Long organizationId;
+
+    private Long branchId;
 
     private Boolean active;
 }

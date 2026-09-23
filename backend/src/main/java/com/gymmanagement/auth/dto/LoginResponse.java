@@ -19,6 +19,8 @@ public class LoginResponse {
     private String lastName;
     private String email;
     private Role role;
+    private Long organizationId;
+    private Long branchId;
     private String accessToken;
     private String refreshToken;
     @Builder.Default

@@ -1,17 +1,20 @@
 package com.gymmanagement.membership;
 
+import com.gymmanagement.billing.Invoice;
+import com.gymmanagement.billing.InvoiceType;
 import com.gymmanagement.client.Client;
 import com.gymmanagement.client.ClientService;
 import com.gymmanagement.client.RegistrationType;
 import com.gymmanagement.common.exception.ResourceNotFoundException;
 import com.gymmanagement.membership.dto.AssignMembershipRequest;
 import com.gymmanagement.membership.dto.MembershipResponse;
-import com.gymmanagement.notification.NotificationService;
+import com.gymmanagement.notification.AutomatedNotificationService;
 import com.gymmanagement.notification.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -23,7 +26,7 @@ public class MembershipServiceImpl implements MembershipService {
     private final ClientService clientService;
     private final MembershipPlanService membershipPlanService;
     private final MembershipMapper membershipMapper;
-    private final NotificationService notificationService;
+        private final AutomatedNotificationService notificationService;
 
     @Override
     @Transactional
@@ -36,6 +39,7 @@ public class MembershipServiceImpl implements MembershipService {
 
         Membership membership = Membership.builder()
                 .client(client)
+                .branch(client.getUser().getBranch())
                 .membershipPlan(plan)
                 .startDate(request.getStartDate())
                 .endDate(request.getStartDate().plusDays(plan.getDurationDays()))
@@ -56,16 +60,53 @@ public class MembershipServiceImpl implements MembershipService {
 
         Membership renewed = Membership.builder()
                 .client(latest.getClient())
+                .branch(latest.getClient().getUser().getBranch())
                 .membershipPlan(latest.getMembershipPlan())
                 .startDate(latest.getEndDate())
                 .endDate(latest.getEndDate().plusDays(latest.getMembershipPlan().getDurationDays()))
                 .status(MembershipStatus.ACTIVE)
                 .build();
         Membership saved = membershipRepository.save(renewed);
-        notificationService.createNotification(latest.getClient().getUser(), NotificationType.MEMBERSHIP_EXPIRY,
-                "Your membership has been renewed until " + saved.getEndDate());
+        notificationService.send(latest.getClient().getUser(), NotificationType.MEMBERSHIP_RENEWED,
+                "Membership renewed", "Your membership has been renewed until " + saved.getEndDate(),
+                "MEMBERSHIP-" + saved.getId() + "-RENEWED");
         return membershipMapper.toResponse(saved);
     }
+
+        @Override
+        @Transactional
+        public Membership activateFromInvoice(Invoice invoice) {
+                if (invoice.getMembershipPlan() == null || invoice.getServiceStartDate() == null) {
+                        throw new IllegalArgumentException("Membership invoice requires a plan and start date");
+                }
+                LocalDate startDate = invoice.getServiceStartDate();
+                if (invoice.getInvoiceType() == InvoiceType.MEMBERSHIP_RENEWAL) {
+                        Membership latest = membershipRepository.findFirstByClientIdOrderByEndDateDesc(invoice.getClient().getId())
+                                        .orElseThrow(() -> new ResourceNotFoundException("Membership", "clientId", invoice.getClient().getId()));
+                        startDate = latest.getEndDate().plusDays(1);
+                }
+                int extraDurationDays = invoice.getMembershipPlan().getExtraDurationDays() == null
+                        ? 0 : invoice.getMembershipPlan().getExtraDurationDays();
+                int discountFreeDays = invoice.getMembershipDiscount() == null
+                        || invoice.getMembershipDiscount().getExtraFreeDays() == null
+                        ? 0 : invoice.getMembershipDiscount().getExtraFreeDays();
+                int durationDays = invoice.getMembershipPlan().getDurationDays() + extraDurationDays + discountFreeDays;
+                Membership membership = Membership.builder()
+                                .client(invoice.getClient())
+                                .branch(invoice.getClient().getUser().getBranch())
+                                .membershipPlan(invoice.getMembershipPlan())
+                                .startDate(startDate)
+                                .endDate(startDate.plusDays(durationDays - 1L))
+                                .status(MembershipStatus.ACTIVE)
+                                .build();
+                Membership saved = membershipRepository.save(membership);
+                invoice.getClient().getUser().setActive(true);
+                notificationService.send(invoice.getClient().getUser(), NotificationType.MEMBERSHIP_RENEWED,
+                                invoice.getInvoiceType() == InvoiceType.MEMBERSHIP_RENEWAL ? "Membership renewed" : "Membership activated",
+                                "Your membership is active until " + saved.getEndDate(),
+                                "INVOICE-" + invoice.getId() + "-MEMBERSHIP-ACTIVATED");
+                return saved;
+        }
 
     @Override
     public List<MembershipResponse> getByClient(Long clientId) {

@@ -24,7 +24,7 @@ public class SessionController {
     private final SessionService sessionService;
 
     @PostMapping
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Schedule a new personal training session")
     public ApiResponse<SessionResponse> scheduleSession(Authentication authentication,
@@ -34,7 +34,7 @@ public class SessionController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @Operation(summary = "Update the status of a training session")
     public ApiResponse<SessionResponse> updateStatus(Authentication authentication, @PathVariable Long id,
                                                       @Valid @RequestBody SessionStatusUpdateRequest request) {
@@ -55,7 +55,7 @@ public class SessionController {
     }
 
     @GetMapping("/my-sessions")
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @Operation(summary = "Get all sessions scheduled by the currently logged-in coach")
     public ApiResponse<List<SessionResponse>> getMySessions(Authentication authentication) {
         return ApiResponse.success(sessionService.getSessionsByCoach(authentication.getName()));

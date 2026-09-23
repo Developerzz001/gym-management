@@ -14,9 +14,10 @@ export interface CoachRequest {
   active?: boolean;
 }
 
-export function useCoachesQuery(keyword: string, page: number, size: number) {
+export function useCoachesQuery(keyword: string, page: number, size: number, enabled = true) {
   return useQuery({
     queryKey: ['coaches', keyword, page, size],
+    enabled,
     queryFn: async () => {
       const response = await axiosClient.get<ApiResponse<PageResponse<CoachResponse>>>('/coaches', {
         params: { keyword: keyword || undefined, page, size },

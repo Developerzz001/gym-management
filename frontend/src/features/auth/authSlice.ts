@@ -9,6 +9,8 @@ interface AuthState {
   lastName: string | null;
   email: string | null;
   role: Role | null;
+  organizationId: number | null;
+  branchId: number | null;
 }
 
 function buildInitialState(): AuthState {
@@ -21,6 +23,8 @@ function buildInitialState(): AuthState {
       lastName: null,
       email: null,
       role: null,
+      organizationId: null,
+      branchId: null,
     };
   }
   return {
@@ -30,6 +34,8 @@ function buildInitialState(): AuthState {
     lastName: stored.lastName,
     email: stored.email,
     role: stored.role as Role,
+    organizationId: stored.organizationId ?? null,
+    branchId: stored.branchId ?? null,
   };
 }
 
@@ -46,6 +52,8 @@ const authSlice = createSlice({
       state.lastName = auth.lastName;
       state.email = auth.email;
       state.role = auth.role as Role;
+      state.organizationId = auth.organizationId ?? null;
+      state.branchId = auth.branchId ?? null;
     },
     clearCredentials: (state) => {
       setStoredAuth(null);
@@ -55,6 +63,8 @@ const authSlice = createSlice({
       state.lastName = null;
       state.email = null;
       state.role = null;
+      state.organizationId = null;
+      state.branchId = null;
     },
   },
 });

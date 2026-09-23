@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from './axiosClient';
-import type { ApiResponse, ClientResponse, Gender, PageResponse } from '@/types';
+import type { ApiResponse, ClientResponse, Gender, PageResponse, RegistrationType } from '@/types';
 
 export interface ClientRequest {
   firstName: string;
@@ -23,12 +23,12 @@ export interface ClientRequest {
   medicalNotes?: string;
 }
 
-export function useClientsQuery(keyword: string, page: number, size: number) {
+export function useClientsQuery(keyword: string, page: number, size: number, registrationType?: RegistrationType) {
   return useQuery({
-    queryKey: ['clients', keyword, page, size],
+    queryKey: ['clients', keyword, page, size, registrationType],
     queryFn: async () => {
       const response = await axiosClient.get<ApiResponse<PageResponse<ClientResponse>>>('/clients', {
-        params: { keyword: keyword || undefined, page, size },
+        params: { keyword: keyword || undefined, registrationType, page, size },
       });
       return response.data.data;
     },
@@ -88,6 +88,18 @@ export function useRegisterInquiryMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       queryClient.invalidateQueries({ queryKey: ['inquiries'] });
+    },
+  });
+}
+
+export function useUploadClientProfileImageMutation() {
+  return useMutation({
+    mutationFn: async ({ id, file }: { id: number; file: File }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      await axiosClient.put(`/clients/${id}/profile-image`, formData, {
+        headers: { 'Content-Type': undefined },
+      });
     },
   });
 }

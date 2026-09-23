@@ -1,5 +1,6 @@
 package com.gymmanagement.membership;
 
+import com.gymmanagement.branch.Branch;
 import com.gymmanagement.client.Client;
 import com.gymmanagement.common.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -26,12 +27,17 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Entity
-@Table(name = "memberships")
+@Table(name = "memberships", indexes = @jakarta.persistence.Index(
+    name = "idx_membership_branch_status_dates", columnList = "branch_id,status,start_date,end_date"))
 public class Membership extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "branch_id")
+    private Branch branch;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "membership_plan_id", nullable = false)

@@ -1,0 +1,499 @@
+You are a Principal Software Architect, Senior Full Stack Engineer, and Product Designer.
+
+I already have a Gym Management System built using:
+
+Backend:
+- Java 21
+- Spring Boot 3
+- Spring Security
+- JWT Authentication
+- PostgreSQL
+- Hibernate/JPA
+- MapStruct
+
+Frontend:
+- React 18
+- TypeScript
+- Vite
+- Material UI
+- Redux Toolkit
+- TanStack Query
+
+Existing Modules:
+- Authentication & Authorization
+- User Management
+- Client Management
+- Coach Management
+- Dietician Management
+- Membership Management
+- Workout Plans
+- Diet Plans
+- Attendance Tracking
+- QR Check-In
+- Payment Management
+- Invoice Management
+- Notifications
+- Revenue Dashboard
+- Reporting System
+- AI Assistant
+
+Implement Phase 3 as an enterprise-grade gym ERP platform with scalable architecture, optimized database design, audit logging, role-based access control, API documentation, reporting, analytics, and AI-based recommendations.
+
+=================================================================
+MODULE 1 : MULTI BRANCH SUPPORT
+=================================================================
+
+Convert the application from a single gym setup into a multi-branch enterprise platform.
+
+Business Requirements:
+
+One company can own multiple branches.
+
+Each branch has:
+- Own members
+- Own coaches
+- Own dieticians
+- Own managers
+- Own attendance records
+- Own inventory
+- Own revenue
+- Own reports
+
+Roles:
+
+SUPER_ADMIN
+- Access all branches
+- Global reports
+- Global analytics
+
+BRANCH_MANAGER
+- Access only assigned branch
+
+COACH
+- Access own branch data
+
+DIETICIAN
+- Access own branch data
+
+CLIENT
+- Access only own records
+
+Create:
+
+Database Tables:
+- organizations
+- branches
+- branch_users
+- branch_settings
+
+Features:
+- Branch onboarding
+- Branch activation/deactivation
+- Branch transfer of members
+- Branch-wise dashboards
+- Branch-wise revenue tracking
+- Branch-wise attendance tracking
+- Branch-specific configuration
+
+Security:
+- Complete data isolation between branches
+- Branch-level authorization
+- Tenant-based filtering
+
+=================================================================
+MODULE 2 : ADVANCED AI COACH
+=================================================================
+
+Upgrade existing AI Assistant into an AI Fitness Coach.
+
+AI should have access to:
+
+- Client profile
+- Age
+- Height
+- Weight
+- BMI
+- Membership type
+- Attendance history
+- Workout plans
+- Diet plans
+- Progress records
+- Goal tracking
+
+AI Features:
+
+1. Personalized Workout Recommendations
+
+Generate workout plans based on:
+- Weight loss
+- Weight gain
+- Muscle building
+- Fat reduction
+- Endurance improvement
+
+2. Personalized Diet Recommendations
+
+Suggest:
+- Calories
+- Macros
+- Meal timings
+- Hydration requirements
+
+3. Progress Analysis
+
+AI should analyze:
+- Weight changes
+- Body fat changes
+- Muscle gain
+- Attendance consistency
+
+Generate:
+- Weekly summary
+- Monthly summary
+- Growth reports
+
+4. AI Alerts
+
+Detect:
+
+- Membership inactivity
+- Poor attendance
+- Workout inconsistency
+- Lack of progress
+
+Generate recommendations.
+
+5. Natural Language Queries
+
+Examples:
+
+"How much weight have I lost in the last 3 months?"
+
+"Show my attendance trend."
+
+"What should I eat to gain muscle?"
+
+"Am I meeting my fitness goals?"
+
+AI should retrieve actual application data before generating responses.
+
+Implement Retrieval Augmented Generation (RAG) architecture.
+
+=================================================================
+MODULE 3 : ANALYTICS DASHBOARD
+=================================================================
+
+Create enterprise-grade analytics dashboards.
+
+Admin Analytics:
+
+- Total Members
+- Active Members
+- Inactive Members
+- Membership Growth
+- Monthly Join Rate
+- Monthly Renewal Rate
+- Branch Performance
+- Revenue Comparison
+- Attendance Trends
+- Coach Performance
+- Client Retention Rates
+
+Visualizations:
+
+- Pie Charts
+- Bar Charts
+- Line Charts
+- Growth Trends
+- Heat Maps
+- KPI Cards
+
+Provide:
+
+- Daily analytics
+- Weekly analytics
+- Monthly analytics
+- Quarterly analytics
+- Yearly analytics
+
+Dashboard Filters:
+
+- Date Range
+- Branch
+- Membership Type
+- Coach
+- Gender
+- Age Group
+
+Create optimized aggregation queries.
+
+=================================================================
+MODULE 4 : REVENUE REPORTING
+=================================================================
+
+Create advanced financial reporting module.
+
+Revenue Sources:
+
+- Membership Fees
+- Renewals
+- Personal Training
+- Supplement Sales
+- Product Sales
+
+Reports:
+
+1. Daily Revenue Report
+
+2. Monthly Revenue Report
+
+3. Annual Revenue Report
+
+4. Branch Revenue Report
+
+5. Revenue Trend Report
+
+6. Renewal Revenue Report
+
+7. Outstanding Payments Report
+
+Financial KPIs:
+
+- Revenue Growth %
+- Average Revenue Per Member
+- Revenue Per Branch
+- Membership Renewal Rate
+- Customer Lifetime Value
+- Profitability Trends
+
+Exports:
+
+- PDF
+- Excel
+- CSV
+
+Charts:
+
+- Revenue vs Expenses
+- Revenue Growth
+- Branch Comparison
+- Forecasting Trend
+
+=================================================================
+MODULE 5 : TRAINER UTILIZATION REPORTS
+=================================================================
+
+Create coach performance management system.
+
+Metrics:
+
+1. Client Allocation
+   - Total Assigned Clients
+   - Active Clients
+
+2. Session Management
+   - Sessions Conducted
+   - Sessions Missed
+   - Sessions Completed
+
+3. Attendance Metrics
+   - Trainer Attendance
+   - Punctuality
+
+4. Performance Metrics
+   - Client Retention
+   - Client Progress Success
+   - Average Rating
+
+Reports:
+
+Coach Dashboard:
+
+- Workload Distribution
+- Training Hours
+- Utilization Percentage
+- Monthly Performance
+- Goal Achievement Rate
+
+Charts:
+
+- Session Trends
+- Utilization Trends
+- Coach Ranking
+- Productivity Matrix
+
+Alerts:
+
+- Over-utilized trainers
+- Under-utilized trainers
+- Unassigned clients
+
+=================================================================
+MODULE 6 : INVENTORY MANAGEMENT
+=================================================================
+
+Create complete inventory and stock management system.
+
+Inventory Categories:
+
+- Supplements
+- Equipment
+- Merchandise
+- Accessories
+
+Database Tables:
+
+- inventory_items
+- inventory_categories
+- inventory_transactions
+- suppliers
+- purchases
+- stock_alerts
+
+Features:
+
+1. Stock Management
+
+Track:
+- Available Quantity
+- Reserved Quantity
+- Damaged Quantity
+- Reorder Level
+
+2. Inventory Operations
+
+- Purchase Stock
+- Issue Stock
+- Return Stock
+- Transfer Stock Between Branches
+
+3. Supplier Management
+
+Store:
+- Supplier Details
+- Contact Information
+- Purchase History
+- Contract Information
+
+4. Stock Alerts
+
+Trigger alerts when:
+- Low Stock
+- Critical Stock
+- Expiring Supplements
+
+5. Inventory Dashboard
+
+Display:
+- Current Inventory Value
+- Low Stock Items
+- Fast Moving Products
+- Dead Stock
+
+Reports:
+
+- Stock Movement Report
+- Purchase Report
+- Supplier Report
+- Inventory Valuation Report
+- Branch Inventory Report
+
+=================================================================
+MODULE 7 : EXECUTIVE MANAGEMENT DASHBOARD
+=================================================================
+
+Create C-Level dashboard for owners.
+
+Metrics:
+
+- Total Branches
+- Total Revenue
+- Total Members
+- Revenue Growth %
+- Membership Growth %
+- Branch Rankings
+- Most Profitable Branch
+- Trainer Efficiency
+- Inventory Value
+- Customer Retention
+
+Provide:
+
+- Executive KPIs
+- Trend Forecasting
+- Branch Comparison
+- Revenue Projection
+- Membership Projection
+
+=================================================================
+FRONTEND REQUIREMENTS
+=================================================================
+
+Develop complete UI modules:
+
+- Multi Branch Administration
+- Branch Dashboard
+- AI Fitness Coach
+- Analytics Center
+- Revenue Analytics
+- Financial Reports
+- Trainer Performance Dashboard
+- Inventory Management
+- Supplier Management
+- Executive Dashboard
+
+UI Standards:
+
+- Material UI
+- Responsive Design
+- Dark Mode Support
+- Pagination
+- Search
+- Advanced Filters
+- Export Options
+- Data Grids
+- Real-Time Refresh
+- Loading States
+- Error Handling
+
+=================================================================
+NON-FUNCTIONAL REQUIREMENTS
+=================================================================
+
+Follow:
+
+- SOLID Principles
+- Clean Architecture
+- CQRS where beneficial
+- Audit Logging
+- Event-Driven Design
+- Database Indexing
+- Global Exception Handling
+- OpenAPI Documentation
+- Unit Tests
+- Integration Tests
+- Security Best Practices
+
+=================================================================
+DELIVERABLES
+=================================================================
+
+Provide:
+
+1. Complete Database Design
+2. ER Diagram
+3. Backend Folder Structure
+4. Frontend Folder Structure
+5. REST API Specifications
+6. Security Design
+7. Multi-Branch Tenant Design
+8. AI Architecture Design
+9. Analytics Architecture
+10. Sequence Diagrams
+11. Test Cases
+12. Deployment Guide
+13. Docker Configuration
+14. CI/CD Pipeline Design
+15. Production-Ready Source Code
+
+Implement module-by-module with enterprise-grade code quality, scalability, maintainability, and performance optimization.

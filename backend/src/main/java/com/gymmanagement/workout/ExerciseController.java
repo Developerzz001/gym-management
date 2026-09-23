@@ -21,7 +21,7 @@ public class ExerciseController {
     private final ExerciseService exerciseService;
 
     @PostMapping
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a new master exercise")
     public ApiResponse<ExerciseResponse> createExercise(@Valid @RequestBody ExerciseRequest request) {
@@ -29,14 +29,14 @@ public class ExerciseController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @Operation(summary = "Update a master exercise")
     public ApiResponse<ExerciseResponse> updateExercise(@PathVariable Long id, @Valid @RequestBody ExerciseRequest request) {
         return ApiResponse.success("Exercise updated successfully", exerciseService.updateExercise(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('FITNESS_COACH')")
+    @PreAuthorize("hasAnyRole('FITNESS_COACH','COACH')")
     @Operation(summary = "Delete a master exercise")
     public ApiResponse<Void> deleteExercise(@PathVariable Long id) {
         exerciseService.deleteExercise(id);

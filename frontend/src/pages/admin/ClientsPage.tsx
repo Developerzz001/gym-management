@@ -29,15 +29,19 @@ import { useCoachesQuery } from '@/api/coachesApi';
 import { useDieticiansQuery } from '@/api/dieticiansApi';
 import { useAssignCoachMutation, useAssignDieticianMutation } from '@/api/assignmentsApi';
 import { extractErrorMessage } from '@/api/axiosClient';
+import { useAppSelector } from '@/app/hooks';
 import { ClientFormDialog } from './ClientFormDialog';
-import type { ClientResponse } from '@/types';
+import type { ClientResponse, RegistrationType } from '@/types';
 
-export function ClientsPage() {
+function ClientManagementPage({ registrationType }: { registrationType: RegistrationType }) {
+  const isInquiryPage = registrationType === 'INQUIRY';
+  const role = useAppSelector((state) => state.auth.role);
+  const canManageAssignments = role === 'ADMIN';
+  const canConvertInquiries = role === 'ADMIN' || role === 'BRANCH_MANAGER' || role === 'RECEPTIONIST';
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [formOpen, setFormOpen] = useState(false);
-  const [inquiryFormOpen, setInquiryFormOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<ClientResponse | null>(null);
   const [conversionTarget, setConversionTarget] = useState<ClientResponse | null>(null);
   const [deactivateTarget, setDeactivateTarget] = useState<ClientResponse | null>(null);
@@ -47,19 +51,19 @@ export function ClientsPage() {
   const [assignDieticianId, setAssignDieticianId] = useState<number | ''>('');
   const [assignError, setAssignError] = useState<string | null>(null);
 
-  const { data, isLoading } = useClientsQuery(keyword, page, pageSize);
-  const { data: coaches } = useCoachesQuery('', 0, 100);
-  const { data: dieticians } = useDieticiansQuery('', 0, 100);
+  const { data, isLoading } = useClientsQuery(keyword, page, pageSize, registrationType);
+  const { data: coaches } = useCoachesQuery('', 0, 100, canManageAssignments);
+  const { data: dieticians } = useDieticiansQuery('', 0, 100, canManageAssignments);
   const deactivateMutation = useDeactivateClientMutation();
   const activateMutation = useActivateClientMutation();
   const assignCoachMutation = useAssignCoachMutation();
   const assignDieticianMutation = useAssignDieticianMutation();
 
   const columns: GridColDef<ClientResponse>[] = [
-    { field: 'firstName', headerName: 'First Name', flex: 1 },
-    { field: 'lastName', headerName: 'Last Name', flex: 1 },
-    { field: 'email', headerName: 'Email', flex: 1.3 },
-    { field: 'contactNumber', headerName: 'Contact', flex: 1 },
+    { field: 'firstName', headerName: 'First Name', width: 140 },
+    { field: 'lastName', headerName: 'Last Name', width: 140 },
+    { field: 'email', headerName: 'Email', width: 240 },
+    { field: 'contactNumber', headerName: 'Contact', width: 150 },
     {
       field: 'membershipAssigned', headerName: 'Membership', width: 145,
       renderCell: (params) => (
@@ -80,11 +84,11 @@ export function ClientsPage() {
       valueGetter: (_value, row) => row.membershipEndDate ?? '-',
     },
     {
-      field: 'assignedCoachName', headerName: 'Coach', flex: 1,
+      field: 'assignedCoachName', headerName: 'Coach', width: 170,
       renderCell: (params) => params.value || <Chip size="small" label="Unassigned" variant="outlined" />,
     },
     {
-      field: 'assignedDieticianName', headerName: 'Dietician', flex: 1,
+      field: 'assignedDieticianName', headerName: 'Dietician', width: 170,
       renderCell: (params) => params.value || <Chip size="small" label="Unassigned" variant="outlined" />,
     },
     {
@@ -117,7 +121,7 @@ export function ClientsPage() {
               </IconButton>
             </Tooltip>
           )}
-          {params.row.registrationType === 'INQUIRY' && (
+          {canConvertInquiries && params.row.registrationType === 'INQUIRY' && (
             <Button
               size="small"
               variant="contained"
@@ -127,7 +131,7 @@ export function ClientsPage() {
               Convert to Client
             </Button>
           )}
-          {params.row.registrationType !== 'INQUIRY' && (
+          {canManageAssignments && params.row.registrationType !== 'INQUIRY' && (
             <Tooltip title="Assign Coach/Dietician">
               <IconButton size="small" disabled={!params.row.active} onClick={() => {
                 setAssignTarget(params.row);
@@ -138,7 +142,7 @@ export function ClientsPage() {
               </IconButton>
             </Tooltip>
           )}
-          {params.row.registrationType === 'INQUIRY' ? null : params.row.active ? (
+          {!canManageAssignments || params.row.registrationType === 'INQUIRY' ? null : params.row.active ? (
             <Tooltip title="Deactivate">
               <IconButton size="small" onClick={() => setDeactivateTarget(params.row)}>
                 <BlockIcon fontSize="small" />
@@ -175,17 +179,16 @@ export function ClientsPage() {
   return (
     <Box>
       <PageHeader
-        title="Clients"
-        subtitle="Register and manage gym clients"
+        title={isInquiryPage ? 'Inquiries' : 'Clients'}
+        subtitle={isInquiryPage ? 'Register and convert prospective client inquiries' : 'Register and manage gym clients'}
         action={
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setSelectedClient(null); setFormOpen(true); }}>
-              Register Client
-            </Button>
-            <Button variant="outlined" startIcon={<ContactPageIcon />} onClick={() => setInquiryFormOpen(true)}>
-              Register Inquiry
-            </Button>
-          </Box>
+          <Button
+            variant="contained"
+            startIcon={isInquiryPage ? <ContactPageIcon /> : <AddIcon />}
+            onClick={() => { setSelectedClient(null); setFormOpen(true); }}
+          >
+            {isInquiryPage ? 'Register Inquiry' : 'Register Client'}
+          </Button>
         }
       />
 
@@ -213,8 +216,12 @@ export function ClientsPage() {
         />
       </Paper>
 
-      <ClientFormDialog open={formOpen} onClose={() => setFormOpen(false)} client={selectedClient} />
-      <ClientFormDialog open={inquiryFormOpen} onClose={() => setInquiryFormOpen(false)} inquiry />
+      <ClientFormDialog
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        client={selectedClient}
+        inquiry={isInquiryPage}
+      />
       <ClientFormDialog
         open={!!conversionTarget}
         onClose={() => setConversionTarget(null)}
@@ -270,4 +277,12 @@ export function ClientsPage() {
       </Dialog>
     </Box>
   );
+}
+
+export function InquiriesPage() {
+  return <ClientManagementPage registrationType="INQUIRY" />;
+}
+
+export function ClientsPage() {
+  return <ClientManagementPage registrationType="REGISTERED" />;
 }

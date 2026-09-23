@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   Typography,
@@ -28,6 +29,16 @@ const validationSchema = Yup.object({
 
 function homePathForRole(role: Role): string {
   switch (role) {
+    case 'SUPER_ADMIN':
+      return '/platform/organizations';
+    case 'ORGANIZATION_ADMIN':
+      return '/platform/organization-dashboard';
+    case 'BRANCH_MANAGER':
+      return '/platform/branch-dashboard';
+    case 'RECEPTIONIST':
+      return '/platform/clients';
+    case 'COACH':
+      return '/coach/dashboard';
     case 'ADMIN':
       return '/admin/dashboard';
     case 'FITNESS_COACH':
@@ -40,26 +51,13 @@ function homePathForRole(role: Role): string {
   }
 }
 
-function isRoleAllowedPath(path: string, role: Role): boolean {
-  const roleBasePath =
-    role === 'ADMIN'
-      ? '/admin'
-      : role === 'FITNESS_COACH'
-      ? '/coach'
-      : role === 'DIETICIAN'
-      ? '/dietician'
-      : '/client';
-
-  return path === roleBasePath || path.startsWith(`${roleBasePath}/`);
-}
-
 export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const loginMutation = useLoginMutation();
+  const queryClient = useQueryClient();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const formik = useFormik({
     initialValues: { email: '', password: '' },
@@ -77,13 +75,12 @@ export function LoginPage() {
             lastName: data.lastName,
             email: data.email,
             role: data.role,
+            organizationId: data.organizationId,
+            branchId: data.branchId,
           })
         );
-        const redirectTo = (location.state as { from?: { pathname: string } })?.from?.pathname;
-        const fallbackPath = homePathForRole(data.role);
-        const safeTarget =
-          redirectTo && isRoleAllowedPath(redirectTo, data.role) ? redirectTo : fallbackPath;
-        navigate(safeTarget, { replace: true });
+        queryClient.removeQueries();
+        navigate(homePathForRole(data.role), { replace: true });
       } catch (error) {
         setErrorMessage(extractErrorMessage(error));
       }

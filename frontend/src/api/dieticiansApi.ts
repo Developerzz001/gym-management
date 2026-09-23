@@ -14,9 +14,10 @@ export interface DieticianRequest {
   active?: boolean;
 }
 
-export function useDieticiansQuery(keyword: string, page: number, size: number) {
+export function useDieticiansQuery(keyword: string, page: number, size: number, enabled = true) {
   return useQuery({
     queryKey: ['dieticians', keyword, page, size],
+    enabled,
     queryFn: async () => {
       const response = await axiosClient.get<ApiResponse<PageResponse<DieticianResponse>>>('/dieticians', {
         params: { keyword: keyword || undefined, page, size },

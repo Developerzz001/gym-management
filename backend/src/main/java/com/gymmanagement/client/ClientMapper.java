@@ -14,6 +14,9 @@ public abstract class ClientMapper {
 
     @Mapping(target = "id", source = "client.id")
     @Mapping(target = "userId", source = "client.user.id")
+    @Mapping(target = "organizationId", source = "client.user.organization.id")
+    @Mapping(target = "branchId", source = "client.user.branch.id")
+    @Mapping(target = "branchName", source = "client.user.branch.branchName")
     @Mapping(target = "firstName", source = "client.user.firstName")
     @Mapping(target = "lastName", source = "client.user.lastName")
     @Mapping(target = "email", source = "client.user.email")

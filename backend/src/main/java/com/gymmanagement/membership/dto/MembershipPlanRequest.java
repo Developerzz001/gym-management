@@ -3,6 +3,7 @@ package com.gymmanagement.membership.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,6 +29,9 @@ public class MembershipPlanRequest {
     @NotNull(message = "Fees is required")
     @Positive(message = "Fees must be positive")
     private BigDecimal fees;
+
+    @PositiveOrZero(message = "Extra duration cannot be negative")
+    private Integer extraDurationDays;
 
     private String description;
 }

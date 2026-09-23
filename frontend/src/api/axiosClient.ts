@@ -2,6 +2,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import type { ApiResponse, LoginResponse } from '@/types';
 
 const LEGACY_AUTH_STORAGE_KEY = 'gym_auth';
+const AUTH_STORAGE_KEY = 'gym_auth_session';
 
 export interface StoredAuth {
   accessToken: string;
@@ -11,9 +12,22 @@ export interface StoredAuth {
   lastName: string;
   email: string;
   role: string;
+  organizationId?: number;
+  branchId?: number;
 }
 
-let currentAuth: StoredAuth | null = null;
+function readStoredAuth(): StoredAuth | null {
+  if (typeof sessionStorage === 'undefined') return null;
+  try {
+    const value = sessionStorage.getItem(AUTH_STORAGE_KEY);
+    return value ? JSON.parse(value) as StoredAuth : null;
+  } catch {
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
+    return null;
+  }
+}
+
+let currentAuth: StoredAuth | null = readStoredAuth();
 
 if (typeof localStorage !== 'undefined') {
   localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
@@ -25,6 +39,12 @@ export function getStoredAuth(): StoredAuth | null {
 
 export function setStoredAuth(auth: StoredAuth | null) {
   currentAuth = auth;
+  if (typeof sessionStorage === 'undefined') return;
+  if (auth) {
+    sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth));
+  } else {
+    sessionStorage.removeItem(AUTH_STORAGE_KEY);
+  }
 }
 
 export const axiosClient = axios.create({
@@ -67,6 +87,7 @@ axiosClient.interceptors.response.use(
         window.location.href = '/login';
         return Promise.reject(error);
       }
+      const refreshToken = auth.refreshToken;
 
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -86,9 +107,14 @@ axiosClient.interceptors.response.use(
 
       try {
         const response = await axios.post<ApiResponse<LoginResponse>>('/api/v1/auth/refresh-token', {
-          refreshToken: auth.refreshToken,
+          refreshToken,
         });
         const data = response.data.data;
+        if (getStoredAuth()?.refreshToken !== refreshToken) {
+          isRefreshing = false;
+          onTokenRefreshed(getStoredAuth()?.accessToken ?? null);
+          return Promise.reject(error);
+        }
         setStoredAuth({
           accessToken: data.accessToken,
           refreshToken: data.refreshToken,
@@ -97,6 +123,8 @@ axiosClient.interceptors.response.use(
           lastName: data.lastName,
           email: data.email,
           role: data.role,
+          organizationId: data.organizationId,
+          branchId: data.branchId,
         });
         isRefreshing = false;
         onTokenRefreshed(data.accessToken);
@@ -105,8 +133,10 @@ axiosClient.interceptors.response.use(
       } catch (refreshError) {
         isRefreshing = false;
         onTokenRefreshed(null);
-        setStoredAuth(null);
-        window.location.href = '/login';
+        if (getStoredAuth()?.refreshToken === refreshToken) {
+          setStoredAuth(null);
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }

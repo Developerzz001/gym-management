@@ -19,5 +19,6 @@ public class MembershipPlanResponse {
     private String name;
     private Integer durationDays;
     private BigDecimal fees;
+    private Integer extraDurationDays;
     private String description;
 }

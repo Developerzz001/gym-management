@@ -11,12 +11,13 @@ import { useAppSelector } from '@/app/hooks';
 import type { ClientRequest } from '@/api/clientsApi';
 import type { CoachRequest } from '@/api/coachesApi';
 import type { DieticianRequest } from '@/api/dieticiansApi';
-import type { ClientResponse, CoachResponse, DieticianResponse } from '@/types';
+import type { UserProfileRequest } from '@/api/profileApi';
+import type { ClientResponse, CoachResponse, DieticianResponse, Role, UserResponse } from '@/types';
 
-type ProfileValues = Omit<ClientRequest, 'active'> | Omit<CoachRequest, 'active'> | Omit<DieticianRequest, 'active'>;
+type ProfileValues = Omit<ClientRequest, 'active'> | Omit<CoachRequest, 'active'> | Omit<DieticianRequest, 'active'> | UserProfileRequest;
 
 export function ProfilePage() {
-  const role = useAppSelector((state) => state.auth.role) as 'CLIENT' | 'FITNESS_COACH' | 'DIETICIAN';
+  const role = useAppSelector((state) => state.auth.role) as Role;
   const { data: profile, isLoading } = useMyProfileQuery(role);
   const updateMutation = useUpdateMyProfileMutation(role);
   const { data: profileImage } = useMyProfileImageQuery(true);
@@ -24,6 +25,7 @@ export function ProfilePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const isClient = role === 'CLIENT';
+  const isProfessional = role === 'FITNESS_COACH' || role === 'COACH' || role === 'DIETICIAN';
 
   const validationSchema = useMemo(() => Yup.object({
     firstName: Yup.string().required('First name is required'),
@@ -36,9 +38,11 @@ export function ProfilePage() {
       firstName: '', lastName: '', email: '', password: '', gender: undefined, dateOfBirth: '',
       heightCm: undefined, weightKg: undefined, address: '', contactNumber: '', fitnessGoal: '',
       diabetes: false, hypertension: false, asthma: false, allergies: '', injuries: '', medicalNotes: '',
-    } : {
+    } : isProfessional ? {
       firstName: '', lastName: '', email: '', mobileNumber: '', password: '', specialization: '',
       experienceYears: undefined, bio: '',
+    } : {
+      firstName: '', lastName: '', email: '', mobileNumber: '', password: '',
     };
 
   if (profile && isClient) {
@@ -51,12 +55,18 @@ export function ProfilePage() {
       asthma: client.asthma, allergies: client.allergies ?? '', injuries: client.injuries ?? '',
       medicalNotes: client.medicalNotes ?? '',
     });
-  } else if (profile) {
+  } else if (profile && isProfessional) {
     const professional = profile as CoachResponse | DieticianResponse;
     Object.assign(initialValues, {
       firstName: professional.firstName, lastName: professional.lastName, email: professional.email,
       mobileNumber: professional.mobileNumber ?? '', specialization: professional.specialization ?? '',
       experienceYears: professional.experienceYears, bio: professional.bio ?? '',
+    });
+  } else if (profile) {
+    const user = profile as UserResponse;
+    Object.assign(initialValues, {
+      firstName: user.firstName, lastName: user.lastName, email: user.email,
+      mobileNumber: user.mobileNumber ?? '',
     });
   }
 
@@ -151,7 +161,7 @@ export function ProfilePage() {
                 <Grid size={12}><TextField fullWidth multiline rows={3} label="Medical Notes" name="medicalNotes" value={value('medicalNotes')} onChange={formik.handleChange} /></Grid>
               </Grid>
             </>
-          ) : (
+          ) : isProfessional ? (
             <>
               <Divider sx={{ my: 3 }} />
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>Professional Details</Typography>
@@ -161,7 +171,7 @@ export function ProfilePage() {
                 <Grid size={12}><TextField fullWidth multiline rows={3} label="Bio" name="bio" value={value('bio')} onChange={formik.handleChange} /></Grid>
               </Grid>
             </>
-          )}
+          ) : null}
           <Box sx={{ mt: 3 }}><Button type="submit" variant="contained" disabled={updateMutation.isPending}>Save Changes</Button></Box>
         </form>
       </Paper>

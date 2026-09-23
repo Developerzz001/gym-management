@@ -25,37 +25,41 @@ public class WhatsAppNotificationService {
     private final WhatsAppProperties whatsAppProperties;
 
     public void sendWorkoutPlanAssigned(Client client, String planTitle, String coachName) {
-        sendToUser(client.getUser(),
+        sendMessageToUser(client.getUser(),
                 "Hi " + client.getUser().getFirstName() + ", your coach " + coachName
                         + " assigned a new workout plan: " + planTitle + ". Open the app to view details.");
     }
 
     public void sendDietPlanAssigned(Client client, String planTitle, String dieticianName) {
-        sendToUser(client.getUser(),
+        sendMessageToUser(client.getUser(),
                 "Hi " + client.getUser().getFirstName() + ", your dietician " + dieticianName
                         + " assigned a new diet plan: " + planTitle + ". Open the app to view details.");
     }
 
     public void sendDietReminder(Client client, MealType mealType, LocalTime mealTime, String foodItem, String quantity) {
         String quantityText = quantity == null || quantity.isBlank() ? "" : " (" + quantity + ")";
-        sendToUser(client.getUser(),
+        sendMessageToUser(client.getUser(),
                 "Diet reminder: " + formatMealType(mealType) + " at " + mealTime.format(TIME_FORMATTER)
                         + " - " + foodItem + quantityText + ". Stay consistent.");
     }
 
     public void sendCoachMissingPlanReminder(FitnessCoach coach, int missingClientCount) {
-        sendToUser(coach.getUser(),
+        sendMessageToUser(coach.getUser(),
                 "Reminder: " + missingClientCount + " assigned client(s) still do not have a workout plan."
                         + " Please add plans in Gym Management.");
     }
 
     public void sendDieticianMissingPlanReminder(Dietician dietician, int missingClientCount) {
-        sendToUser(dietician.getUser(),
+        sendMessageToUser(dietician.getUser(),
                 "Reminder: " + missingClientCount + " assigned client(s) still do not have a diet plan."
                         + " Please add plans in Gym Management.");
     }
 
-    private void sendToUser(User user, String message) {
+    public void sendToUser(User user, String message) {
+        sendMessageToUser(user, message);
+    }
+
+    private void sendMessageToUser(User user, String message) {
         normalizePhone(user.getMobileNumber())
                 .ifPresentOrElse(
                         phone -> {

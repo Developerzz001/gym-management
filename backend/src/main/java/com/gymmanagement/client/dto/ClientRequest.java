@@ -20,6 +20,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class ClientRequest {
 
+    private Long branchId;
+
     @NotBlank(message = "First name is required")
     private String firstName;
 

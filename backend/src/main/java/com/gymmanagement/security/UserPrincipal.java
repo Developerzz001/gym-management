@@ -1,5 +1,6 @@
 package com.gymmanagement.security;
 
+import com.gymmanagement.organization.OrganizationStatus;
 import com.gymmanagement.user.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,6 +19,8 @@ public class UserPrincipal implements UserDetails {
     private final String fullName;
     private final String role;
     private final boolean active;
+    private final Long organizationId;
+    private final Long branchId;
 
     public UserPrincipal(User user) {
         this.id = user.getId();
@@ -25,7 +28,10 @@ public class UserPrincipal implements UserDetails {
         this.password = user.getPassword();
         this.fullName = user.getFullName();
         this.role = user.getRole().name();
-        this.active = user.isActive();
+        this.active = user.isActive() && (user.getOrganization() == null
+            || user.getOrganization().getStatus() == OrganizationStatus.ACTIVE);
+        this.organizationId = user.getOrganization() == null ? null : user.getOrganization().getId();
+        this.branchId = user.getBranch() == null ? null : user.getBranch().getId();
     }
 
     @Override

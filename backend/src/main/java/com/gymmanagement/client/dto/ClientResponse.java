@@ -19,6 +19,9 @@ public class ClientResponse {
 
     private Long id;
     private Long userId;
+    private Long organizationId;
+    private Long branchId;
+    private String branchName;
     private String firstName;
     private String lastName;
     private String email;

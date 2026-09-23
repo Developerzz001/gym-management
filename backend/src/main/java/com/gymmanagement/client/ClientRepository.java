@@ -25,9 +25,34 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     List<Client> findByAssignedDieticianIsNotNull();
 
-    @Query("select c from Client c where " +
+    @Query("select c from Client c where (:registrationType is null or c.registrationType = :registrationType " +
+            "or (:registrationType = com.gymmanagement.client.RegistrationType.REGISTERED and c.registrationType is null)) and (" +
             "lower(c.user.firstName) like lower(concat('%', :keyword, '%')) or " +
             "lower(c.user.lastName) like lower(concat('%', :keyword, '%')) or " +
-            "lower(c.user.email) like lower(concat('%', :keyword, '%'))")
-    Page<Client> search(@Param("keyword") String keyword, Pageable pageable);
+            "lower(c.user.email) like lower(concat('%', :keyword, '%')))")
+    Page<Client> search(@Param("keyword") String keyword,
+                        @Param("registrationType") RegistrationType registrationType, Pageable pageable);
+
+    @Query("select c from Client c where c.user.organization.id = :organizationId " +
+            "and (:registrationType is null or c.registrationType = :registrationType " +
+            "or (:registrationType = com.gymmanagement.client.RegistrationType.REGISTERED and c.registrationType is null)) and (" +
+            "lower(c.user.firstName) like lower(concat('%', :keyword, '%')) or " +
+            "lower(c.user.lastName) like lower(concat('%', :keyword, '%')) or " +
+            "lower(c.user.email) like lower(concat('%', :keyword, '%')))" )
+    Page<Client> searchByOrganization(@Param("organizationId") Long organizationId,
+                                      @Param("keyword") String keyword,
+                                      @Param("registrationType") RegistrationType registrationType, Pageable pageable);
+
+    @Query("select c from Client c where c.user.branch.id = :branchId " +
+            "and (:registrationType is null or c.registrationType = :registrationType " +
+            "or (:registrationType = com.gymmanagement.client.RegistrationType.REGISTERED and c.registrationType is null)) and (" +
+            "lower(c.user.firstName) like lower(concat('%', :keyword, '%')) or " +
+            "lower(c.user.lastName) like lower(concat('%', :keyword, '%')) or " +
+            "lower(c.user.email) like lower(concat('%', :keyword, '%')))" )
+    Page<Client> searchByBranch(@Param("branchId") Long branchId,
+                                @Param("keyword") String keyword,
+                                @Param("registrationType") RegistrationType registrationType, Pageable pageable);
+
+    long countByUserBranchId(Long branchId);
+    long countByUserBranchIdAndUserActiveTrue(Long branchId);
 }
