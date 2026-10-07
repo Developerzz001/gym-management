@@ -99,6 +99,13 @@ public class UserController {
         return ApiResponse.success(userService.getUserById(id));
     }
 
+    @GetMapping("/receptionists")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER','RECEPTIONIST')")
+    @Operation(summary = "List receptionists for executive assignment")
+    public ApiResponse<java.util.List<UserResponse>> getReceptionists() {
+        return ApiResponse.success(userService.getReceptionists());
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER')")
     @Operation(summary = "Search / list users with pagination")

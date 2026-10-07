@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalTime;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -33,6 +34,8 @@ public class UserRequest {
 
     @Pattern(regexp = "^[0-9+\\-\\s]{7,20}$", message = "Mobile number is invalid")
     private String mobileNumber;
+
+    private LocalDate dateOfBirth;
 
     private LocalTime shiftStartTime;
 

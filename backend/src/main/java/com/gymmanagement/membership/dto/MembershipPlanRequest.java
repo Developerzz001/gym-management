@@ -34,4 +34,6 @@ public class MembershipPlanRequest {
     private Integer extraDurationDays;
 
     private String description;
+
+    private Long activityId;
 }

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from './axiosClient';
-import type { ApiResponse, MembershipDiscountResponse, MembershipPlanResponse, MembershipResponse } from '@/types';
+import type { ActivityResponse, ApiResponse, MembershipDiscountResponse, MembershipPlanResponse, MembershipResponse } from '@/types';
 
 export interface MembershipPlanRequest {
   name: string;
@@ -8,6 +8,50 @@ export interface MembershipPlanRequest {
   fees: number;
   extraDurationDays: number;
   description?: string;
+  activityId?: number;
+}
+
+export interface ActivityRequest {
+  name: string;
+  description?: string;
+}
+
+export function useActivitiesQuery() {
+  return useQuery({
+    queryKey: ['activities'],
+    queryFn: async () => {
+      const response = await axiosClient.get<ApiResponse<ActivityResponse[]>>('/activities');
+      return response.data.data;
+    },
+  });
+}
+
+export function useCreateActivityMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: ActivityRequest) =>
+      (await axiosClient.post<ApiResponse<ActivityResponse>>('/activities', payload)).data.data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['activities'] }),
+  });
+}
+
+export function useUpdateActivityMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: number; payload: ActivityRequest }) =>
+      (await axiosClient.put<ApiResponse<ActivityResponse>>(`/activities/${id}`, payload)).data.data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['activities'] }),
+  });
+}
+
+export function useDeleteActivityMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await axiosClient.delete(`/activities/${id}`);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['activities'] }),
+  });
 }
 
 export interface MembershipDiscountRequest {
@@ -65,11 +109,13 @@ export interface AssignMembershipRequest {
   startDate: string;
 }
 
-export function useMembershipPlansQuery() {
+export function useMembershipPlansQuery(activityId?: number) {
   return useQuery({
-    queryKey: ['membership-plans'],
+    queryKey: ['membership-plans', activityId],
     queryFn: async () => {
-      const response = await axiosClient.get<ApiResponse<MembershipPlanResponse[]>>('/membership-plans');
+      const response = await axiosClient.get<ApiResponse<MembershipPlanResponse[]>>('/membership-plans', {
+        params: { activityId },
+      });
       return response.data.data;
     },
   });

@@ -1,7 +1,10 @@
 package com.gymmanagement.client.dto;
 
 import com.gymmanagement.client.Gender;
+import com.gymmanagement.client.InquiryRating;
 import com.gymmanagement.client.RegistrationType;
+import com.gymmanagement.client.Source;
+import com.gymmanagement.client.SportActivity;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -25,10 +28,8 @@ public class ClientRequest {
     @NotBlank(message = "First name is required")
     private String firstName;
 
-    @NotBlank(message = "Last name is required")
     private String lastName;
 
-    @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
     private String email;
 
@@ -42,6 +43,10 @@ public class ClientRequest {
 
     private LocalDate dateOfBirth;
 
+    private LocalDate inquiryDate;
+
+    private LocalDate nextFollowUpDate;
+
     private Double heightCm;
 
     private Double weightKg;
@@ -51,7 +56,19 @@ public class ClientRequest {
     @Pattern(regexp = "^[0-9+\\-\\s]{7,20}$", message = "Contact number is invalid")
     private String contactNumber;
 
+    private String alternateContactNumber;
+
     private String fitnessGoal;
+
+    private Source source;
+
+    private SportActivity sportActivity;
+
+    private Long executiveId;
+
+    private InquiryRating rating;
+
+    private String comment;
 
     private boolean diabetes;
 

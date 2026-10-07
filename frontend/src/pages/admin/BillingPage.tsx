@@ -83,7 +83,7 @@ export function BillingPage() {
           value={initialPayment.amount} onChange={(e) => setInitialPayment({ ...initialPayment, amount: e.target.value })} />}
         <TextField select fullWidth margin="normal" label="Payment Method" value={initialPayment.paymentMethod}
           onChange={(e) => setInitialPayment({ ...initialPayment, paymentMethod: e.target.value as PaymentMethod })}>
-          {['CASH', 'UPI', 'CREDIT_CARD', 'DEBIT_CARD', 'NET_BANKING'].map((method) => <MenuItem key={method} value={method}>{method.replaceAll('_', ' ')}</MenuItem>)}
+          {['CASH', 'UPI', 'CREDIT_CARD', 'DEBIT_CARD', 'NET_BANKING', 'CHEQUE', 'OTHER'].map((method) => <MenuItem key={method} value={method}>{method.replaceAll('_', ' ')}</MenuItem>)}
         </TextField>
         <TextField fullWidth margin="normal" label="Transaction Reference" value={initialPayment.transactionReference}
           onChange={(e) => setInitialPayment({ ...initialPayment, transactionReference: e.target.value })} />
@@ -107,7 +107,7 @@ export function BillingPage() {
     <Dialog open={!!paymentInvoice} onClose={() => setPaymentInvoice(null)} fullWidth maxWidth="xs"><DialogTitle>Record payment</DialogTitle><DialogContent>
       <Typography variant="body2" color="text.secondary">Outstanding: {money(paymentInvoice?.balanceAmount ?? 0)}</Typography>
       <TextField fullWidth margin="normal" type="number" label="Amount" value={payment.amount} onChange={(e) => setPayment({ ...payment, amount: e.target.value })} />
-      <TextField select fullWidth margin="normal" label="Method" value={payment.paymentMethod} onChange={(e) => setPayment({ ...payment, paymentMethod: e.target.value as PaymentMethod })}>{['CASH', 'UPI', 'CREDIT_CARD', 'DEBIT_CARD', 'NET_BANKING'].map((method) => <MenuItem key={method} value={method}>{method.replaceAll('_', ' ')}</MenuItem>)}</TextField>
+      <TextField select fullWidth margin="normal" label="Method" value={payment.paymentMethod} onChange={(e) => setPayment({ ...payment, paymentMethod: e.target.value as PaymentMethod })}>{['CASH', 'UPI', 'CREDIT_CARD', 'DEBIT_CARD', 'NET_BANKING', 'CHEQUE', 'OTHER'].map((method) => <MenuItem key={method} value={method}>{method.replaceAll('_', ' ')}</MenuItem>)}</TextField>
       <TextField fullWidth margin="normal" label="Transaction reference" value={payment.transactionReference} onChange={(e) => setPayment({ ...payment, transactionReference: e.target.value })} /><TextField fullWidth margin="normal" label="Remarks" value={payment.remarks} onChange={(e) => setPayment({ ...payment, remarks: e.target.value })} />
     </DialogContent><DialogActions><Button onClick={() => setPaymentInvoice(null)}>Cancel</Button><Button variant="contained" disabled={!payment.amount || recordPayment.isPending} onClick={async () => { if (!paymentInvoice) return; await recordPayment.mutateAsync({ invoiceId: paymentInvoice.id, ...payment, amount: Number(payment.amount) }); setPaymentInvoice(null); }}>Record</Button></DialogActions></Dialog>
   </Box>;

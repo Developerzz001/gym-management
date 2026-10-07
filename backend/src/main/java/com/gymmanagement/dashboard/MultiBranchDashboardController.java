@@ -18,7 +18,7 @@ public class MultiBranchDashboardController {
     private final MultiBranchDashboardService service;
 
     @GetMapping("/branches/{branchId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','BRANCH_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER','RECEPTIONIST')")
     public ApiResponse<BranchDashboardResponse> branch(@PathVariable Long branchId) {
         return ApiResponse.success(service.branch(branchId));
     }

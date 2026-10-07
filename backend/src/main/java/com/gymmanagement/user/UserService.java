@@ -21,6 +21,8 @@ public interface UserService {
 
     PageResponse<UserResponse> getUsers(String keyword, Role role, int page, int size);
 
+    java.util.List<UserResponse> getReceptionists();
+
     User getUserEntityById(Long id);
 
     User getUserEntityByEmail(String email);

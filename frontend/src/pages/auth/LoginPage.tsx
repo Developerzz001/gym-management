@@ -30,13 +30,13 @@ const validationSchema = Yup.object({
 function homePathForRole(role: Role): string {
   switch (role) {
     case 'SUPER_ADMIN':
-      return '/platform/organizations';
+      return '/admin/dashboard';
     case 'ORGANIZATION_ADMIN':
-      return '/platform/organization-dashboard';
+      return '/admin/dashboard';
     case 'BRANCH_MANAGER':
-      return '/platform/branch-dashboard';
+      return '/admin/dashboard';
     case 'RECEPTIONIST':
-      return '/platform/clients';
+      return '/admin/dashboard';
     case 'COACH':
       return '/coach/dashboard';
     case 'ADMIN':

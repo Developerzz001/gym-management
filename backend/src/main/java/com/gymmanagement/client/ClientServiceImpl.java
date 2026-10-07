@@ -7,6 +7,7 @@ import com.gymmanagement.client.dto.ClientResponse;
 import com.gymmanagement.client.dto.ClientProfileRequest;
 import com.gymmanagement.coach.CoachService;
 import com.gymmanagement.common.dto.PageResponse;
+import com.gymmanagement.common.exception.BadRequestException;
 import com.gymmanagement.common.exception.DuplicateResourceException;
 import com.gymmanagement.common.exception.ResourceNotFoundException;
 import com.gymmanagement.dietician.DieticianService;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +43,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     public ClientResponse registerClient(ClientRequest request) {
+        validateRegisteredClientIdentity(request);
         request.setRegistrationType(RegistrationType.REGISTERED);
         return createClient(request);
     }
@@ -48,20 +51,27 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     public ClientResponse registerInquiry(ClientRequest request) {
+        if (request.getContactNumber() == null || request.getContactNumber().isBlank()) {
+            throw new BadRequestException("Phone number is required");
+        }
         request.setRegistrationType(RegistrationType.INQUIRY);
         request.setActive(false);
         return createClient(request);
     }
 
     private ClientResponse createClient(ClientRequest request) {
-        if (userRepository.existsByEmailIgnoreCase(request.getEmail())) {
+        String email = request.getEmail() == null || request.getEmail().isBlank()
+                ? "member-" + UUID.randomUUID() + "@placeholder.local"
+                : request.getEmail();
+        String lastName = request.getLastName() == null ? "" : request.getLastName();
+        if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new DuplicateResourceException("A user with email '" + request.getEmail() + "' already exists");
         }
         Branch branch = resolveRegistrationBranch(request.getBranchId());
         User user = User.builder()
                 .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(request.getEmail())
+                .lastName(lastName)
+                .email(email)
                 .mobileNumber(request.getContactNumber())
                 .password(passwordEncoder.encode(request.getPassword() != null ? request.getPassword() : "Client@123"))
                 .role(Role.CLIENT)
@@ -77,11 +87,19 @@ public class ClientServiceImpl implements ClientService {
                         ? RegistrationType.REGISTERED : request.getRegistrationType())
                 .gender(request.getGender())
                 .dateOfBirth(request.getDateOfBirth())
+                .inquiryDate(request.getInquiryDate())
+                .nextFollowUpDate(request.getNextFollowUpDate())
                 .heightCm(request.getHeightCm())
                 .weightKg(request.getWeightKg())
                 .address(request.getAddress())
                 .contactNumber(request.getContactNumber())
+                .alternateContactNumber(request.getAlternateContactNumber())
                 .fitnessGoal(request.getFitnessGoal())
+                .source(request.getSource())
+                .sportActivity(request.getSportActivity())
+                .assignedExecutive(resolveExecutive(request.getExecutiveId()))
+                .rating(request.getRating())
+                .comment(request.getComment())
                 .diabetes(request.isDiabetes())
                 .hypertension(request.isHypertension())
                 .asthma(request.isAsthma())
@@ -89,7 +107,29 @@ public class ClientServiceImpl implements ClientService {
                 .injuries(request.getInjuries())
                 .medicalNotes(request.getMedicalNotes())
                 .build();
+        client = clientRepository.save(client);
+        client.setMemberCode(formatMemberCode(client.getId()));
         return clientMapper.toResponse(clientRepository.save(client));
+    }
+
+    private String formatMemberCode(Long id) {
+        return "MEM" + String.format("%06d", id);
+    }
+
+    @Override
+    public String previewNextMemberCode() {
+        Long nextId = clientRepository.findTopByOrderByIdDesc()
+                .map(client -> client.getId() + 1)
+                .orElse(1L);
+        return formatMemberCode(nextId);
+    }
+
+    private User resolveExecutive(Long executiveId) {
+        if (executiveId != null) {
+            return userRepository.findById(executiveId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", executiveId));
+        }
+        return tenantAccess.currentUser();
     }
 
     @Override
@@ -118,7 +158,15 @@ public class ClientServiceImpl implements ClientService {
         client.setWeightKg(request.getWeightKg());
         client.setAddress(request.getAddress());
         client.setContactNumber(request.getContactNumber());
+        client.setAlternateContactNumber(request.getAlternateContactNumber());
         client.setFitnessGoal(request.getFitnessGoal());
+        client.setSource(request.getSource());
+        client.setSportActivity(request.getSportActivity());
+        if (request.getExecutiveId() != null) {
+            client.setAssignedExecutive(resolveExecutive(request.getExecutiveId()));
+        }
+        client.setRating(request.getRating());
+        client.setComment(request.getComment());
         client.setDiabetes(request.isDiabetes());
         client.setHypertension(request.isHypertension());
         client.setAsthma(request.isAsthma());
@@ -247,6 +295,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     @Transactional
     public ClientResponse convertInquiry(Long id, ClientRequest request) {
+        validateRegisteredClientIdentity(request);
         Client client = getClientEntityById(id);
         if (client.getRegistrationType() != RegistrationType.INQUIRY) {
             throw new IllegalArgumentException("Client is already registered");
@@ -267,11 +316,20 @@ public class ClientServiceImpl implements ClientService {
         client.setRegistrationType(RegistrationType.REGISTERED);
         client.setGender(request.getGender());
         client.setDateOfBirth(request.getDateOfBirth());
+        client.setInquiryDate(request.getInquiryDate());
+        client.setNextFollowUpDate(request.getNextFollowUpDate());
         client.setHeightCm(request.getHeightCm());
         client.setWeightKg(request.getWeightKg());
         client.setAddress(request.getAddress());
         client.setContactNumber(request.getContactNumber());
         client.setFitnessGoal(request.getFitnessGoal());
+        client.setSource(request.getSource());
+        client.setSportActivity(request.getSportActivity());
+        if (request.getExecutiveId() != null) {
+            client.setAssignedExecutive(resolveExecutive(request.getExecutiveId()));
+        }
+        client.setRating(request.getRating());
+        client.setComment(request.getComment());
         client.setDiabetes(request.isDiabetes());
         client.setHypertension(request.isHypertension());
         client.setAsthma(request.isAsthma());
@@ -279,6 +337,12 @@ public class ClientServiceImpl implements ClientService {
         client.setInjuries(request.getInjuries());
         client.setMedicalNotes(request.getMedicalNotes());
         return clientMapper.toResponse(clientRepository.save(client));
+    }
+
+    private void validateRegisteredClientIdentity(ClientRequest request) {
+        if (request.getLastName() == null || request.getLastName().isBlank()) {
+            throw new BadRequestException("Last name is required");
+        }
     }
 
     @Override

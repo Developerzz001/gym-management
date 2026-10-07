@@ -18,6 +18,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
 
     private final MembershipPlanRepository membershipPlanRepository;
     private final MembershipPlanMapper membershipPlanMapper;
+    private final ActivityService activityService;
 
     @Override
     @Transactional
@@ -28,6 +29,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
                 .fees(request.getFees())
                 .extraDurationDays(orZero(request.getExtraDurationDays()))
                 .description(request.getDescription())
+                .activity(request.getActivityId() == null ? null : activityService.getEntityById(request.getActivityId()))
                 .build();
         return membershipPlanMapper.toResponse(membershipPlanRepository.save(plan));
     }
@@ -41,6 +43,7 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
         plan.setFees(request.getFees());
         plan.setExtraDurationDays(orZero(request.getExtraDurationDays()));
         plan.setDescription(request.getDescription());
+        plan.setActivity(request.getActivityId() == null ? null : activityService.getEntityById(request.getActivityId()));
         return membershipPlanMapper.toResponse(membershipPlanRepository.save(plan));
     }
 
@@ -51,8 +54,11 @@ public class MembershipPlanServiceImpl implements MembershipPlanService {
     }
 
     @Override
-    public List<MembershipPlanResponse> getAllPlans() {
-        return membershipPlanRepository.findAll(Sort.by("id").descending()).stream()
+    public List<MembershipPlanResponse> getAllPlans(Long activityId) {
+        List<MembershipPlan> plans = activityId == null
+                ? membershipPlanRepository.findAll(Sort.by("id").descending())
+                : membershipPlanRepository.findByActivityId(activityId, Sort.by("id").descending());
+        return plans.stream()
                 .map(membershipPlanMapper::toResponse)
                 .toList();
     }

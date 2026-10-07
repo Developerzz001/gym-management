@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -22,6 +23,7 @@ public class UserResponse {
     private String lastName;
     private String email;
     private String mobileNumber;
+    private LocalDate dateOfBirth;
     private LocalTime shiftStartTime;
     private LocalTime shiftEndTime;
     private Role role;

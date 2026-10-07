@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl,
-  InputLabel, MenuItem, Paper, Select, Stack, TextField } from '@mui/material';
+  IconButton, InputLabel, MenuItem, Paper, Select, Stack, TextField, Tooltip } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import EditIcon from '@mui/icons-material/Edit';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { PageHeader } from '@/components/common/PageHeader';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useAppSelector } from '@/app/hooks';
 import { extractErrorMessage } from '@/api/axiosClient';
 import { useBranchesQuery } from '@/api/multiBranchApi';
-import { useCreateUserMutation, useUsersQuery, type UserPayload } from '@/api/usersApi';
+import { useCreateUserMutation, useUpdateUserMutation, useUsersQuery, type UserPayload } from '@/api/usersApi';
 import type { Role, UserResponse } from '@/types';
 
 const STAFF_ROLES: Role[] = ['COACH', 'DIETICIAN', 'RECEPTIONIST'];
@@ -19,7 +23,9 @@ export function UserManagementPage() {
   const allowedRoles = isOrganizationAdmin ? ['BRANCH_MANAGER' as Role] : STAFF_ROLES;
   const [page, setPage] = useState(0);
   const [open, setOpen] = useState(false);
-  const emptyForm: UserPayload = { firstName: '', lastName: '', email: '', mobileNumber: '', password: '',
+  const [selected, setSelected] = useState<UserResponse | null>(null);
+  const [statusTarget, setStatusTarget] = useState<UserResponse | null>(null);
+  const emptyForm: UserPayload = { firstName: '', lastName: '', email: '', mobileNumber: '', dateOfBirth: '', password: '',
     shiftStartTime: '', shiftEndTime: '',
     role: allowedRoles[0], organizationId: auth.organizationId ?? undefined,
     branchId: isOrganizationAdmin ? undefined : auth.branchId ?? undefined, active: true };
@@ -27,6 +33,67 @@ export function UserManagementPage() {
   const users = useUsersQuery(page);
   const branches = useBranchesQuery(auth.organizationId ?? undefined, '', 0, 100);
   const create = useCreateUserMutation();
+  const update = useUpdateUserMutation();
+
+  const openCreate = () => {
+    create.reset();
+    update.reset();
+    setSelected(null);
+    setForm({ ...emptyForm });
+    setOpen(true);
+  };
+
+  const openEdit = (user: UserResponse) => {
+    create.reset();
+    update.reset();
+    setSelected(user);
+    setForm({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      mobileNumber: user.mobileNumber ?? '',
+      dateOfBirth: user.dateOfBirth ?? '',
+      shiftStartTime: user.shiftStartTime ?? '',
+      shiftEndTime: user.shiftEndTime ?? '',
+      role: user.role,
+      organizationId: user.organizationId ?? auth.organizationId ?? undefined,
+      branchId: user.branchId ?? auth.branchId ?? undefined,
+      active: user.active,
+    });
+    setOpen(true);
+  };
+
+  const userPayload = (user: UserResponse, active: boolean): UserPayload => ({
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    mobileNumber: user.mobileNumber,
+    dateOfBirth: user.dateOfBirth,
+    shiftStartTime: user.shiftStartTime,
+    shiftEndTime: user.shiftEndTime,
+    role: user.role,
+    organizationId: user.organizationId,
+    branchId: user.branchId,
+    active,
+  });
+
+  const submit = async () => {
+    if (selected) {
+      await update.mutateAsync({ id: selected.id, payload: form });
+    } else {
+      await create.mutateAsync(form);
+    }
+    setOpen(false);
+    setSelected(null);
+    setForm({ ...emptyForm });
+  };
+
+  const changeActive = async () => {
+    if (!statusTarget) return;
+    await update.mutateAsync({ id: statusTarget.id, payload: userPayload(statusTarget, !statusTarget.active) });
+    setStatusTarget(null);
+  };
+
   const columns: GridColDef<UserResponse>[] = [
     { field: 'firstName', headerName: 'First name', flex: 1 },
     { field: 'lastName', headerName: 'Last name', flex: 1 },
@@ -37,23 +104,33 @@ export function UserManagementPage() {
       valueGetter: (_value, row) => row.shiftStartTime && row.shiftEndTime
         ? `${row.shiftStartTime.slice(0, 5)} - ${row.shiftEndTime.slice(0, 5)}` : '-' },
     { field: 'active', headerName: 'Status', width: 100, valueFormatter: (value) => value ? 'Active' : 'Inactive' },
+    { field: 'actions', headerName: 'Actions', width: 110, sortable: false, filterable: false,
+      renderCell: ({ row }) => <Stack direction="row">
+        <Tooltip title="Edit staff">
+          <IconButton size="small" onClick={() => openEdit(row)} aria-label={`Edit ${row.firstName} ${row.lastName}`}>
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={row.active ? 'Deactivate staff' : 'Reactivate staff'}>
+          <IconButton size="small" color={row.active ? 'error' : 'success'} onClick={() => setStatusTarget(row)}
+            aria-label={`${row.active ? 'Deactivate' : 'Reactivate'} ${row.firstName} ${row.lastName}`}>
+            {row.active ? <BlockIcon fontSize="small" /> : <CheckCircleOutlineIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
+      </Stack> },
   ];
-  const submit = async () => {
-    await create.mutateAsync(form);
-    setOpen(false);
-    setForm(emptyForm);
-  };
 
   return <Box><PageHeader title={isOrganizationAdmin ? 'Branch Manager' : 'Branch Staff'}
     subtitle={isOrganizationAdmin ? 'Create managers for branches in your organization' : 'Create coaches, dieticians, and receptionists for your branch'}
-    action={<Button variant="contained" startIcon={<PersonAddIcon />} onClick={() => setOpen(true)}>{isOrganizationAdmin ? 'New Manager' : 'New User'}</Button>} />
-    {users.error && <Alert severity="error" sx={{ mb: 2 }}>{extractErrorMessage(users.error)}</Alert>}
+    action={<Button variant="contained" startIcon={<PersonAddIcon />} onClick={openCreate}>{isOrganizationAdmin ? 'New Manager' : 'New User'}</Button>} />
+    {(users.error || create.error || update.error) && <Alert severity="error" sx={{ mb: 2 }}>{extractErrorMessage(users.error || create.error || update.error)}</Alert>}
     <Paper sx={{ height: 520 }}><DataGrid rows={users.data?.content ?? []} columns={columns} loading={users.isLoading}
       paginationMode="server" rowCount={users.data?.totalElements ?? 0} paginationModel={{ page, pageSize: 20 }}
       onPaginationModelChange={(model) => setPage(model.page)} /></Paper>
-    <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm"><DialogTitle>{isOrganizationAdmin ? 'Create Branch Manager' : 'Create User'}</DialogTitle>
+    <Dialog open={open} onClose={() => { setOpen(false); setSelected(null); }} fullWidth maxWidth="sm"><DialogTitle>
+      {selected ? 'Edit Staff' : isOrganizationAdmin ? 'Create Branch Manager' : 'Create User'}</DialogTitle>
       <DialogContent><Stack spacing={2} sx={{ mt: 1 }}>
-        {create.error && <Alert severity="error">{extractErrorMessage(create.error)}</Alert>}
+        {(create.error || update.error) && <Alert severity="error">{extractErrorMessage(create.error || update.error)}</Alert>}
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6 }}><TextField required fullWidth label="First name" value={form.firstName}
             onChange={(event) => setForm({ ...form, firstName: event.target.value })} /></Grid>
@@ -63,8 +140,11 @@ export function UserManagementPage() {
             onChange={(event) => setForm({ ...form, email: event.target.value })} /></Grid>
           <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Mobile number" value={form.mobileNumber}
             onChange={(event) => setForm({ ...form, mobileNumber: event.target.value })} /></Grid>
-          <Grid size={{ xs: 12, sm: 6 }}><TextField required fullWidth type="password" label="Initial password" value={form.password}
-            onChange={(event) => setForm({ ...form, password: event.target.value })} /></Grid>
+          <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth type="date" label="Date of birth"
+            slotProps={{ inputLabel: { shrink: true } }} value={form.dateOfBirth ?? ''}
+            onChange={(event) => setForm({ ...form, dateOfBirth: event.target.value })} /></Grid>
+          {!selected && <Grid size={{ xs: 12, sm: 6 }}><TextField required fullWidth type="password" label="Initial password" value={form.password ?? ''}
+            onChange={(event) => setForm({ ...form, password: event.target.value })} /></Grid>}
           <Grid size={{ xs: 12, sm: 6 }}><FormControl fullWidth><InputLabel>Role</InputLabel><Select label="Role" value={form.role}
             onChange={(event) => setForm({ ...form, role: event.target.value as Role })}>
             {allowedRoles.map((role) => <MenuItem key={role} value={role}>{role.replaceAll('_', ' ')}</MenuItem>)}
@@ -80,9 +160,17 @@ export function UserManagementPage() {
               {branches.data?.content.map((branch) => <MenuItem key={branch.id} value={branch.id}>{branch.branchName}</MenuItem>)}
             </Select></FormControl></Grid>}
         </Grid>
-      </Stack></DialogContent><DialogActions><Button onClick={() => setOpen(false)}>Cancel</Button>
-        <Button variant="contained" disabled={create.isPending || !form.firstName || !form.lastName || !form.email || form.password.length < 6
+      </Stack></DialogContent><DialogActions><Button onClick={() => { setOpen(false); setSelected(null); }}>Cancel</Button>
+        <Button variant="contained" disabled={create.isPending || update.isPending || !form.firstName || !form.lastName || !form.email
+          || (!selected && (form.password ?? '').length < 6)
           || !form.branchId || !form.shiftStartTime || !form.shiftEndTime}
-          onClick={submit}>Create</Button></DialogActions></Dialog>
+          onClick={submit}>{selected ? 'Save changes' : 'Create'}</Button></DialogActions></Dialog>
+    <ConfirmDialog open={!!statusTarget}
+      title={statusTarget?.active ? 'Deactivate Staff' : 'Reactivate Staff'}
+      message={statusTarget?.active
+        ? `Deactivate ${statusTarget.firstName} ${statusTarget.lastName}? They will no longer be able to log in.`
+        : `Reactivate ${statusTarget?.firstName} ${statusTarget?.lastName}? They will be able to log in again.`}
+      onClose={() => setStatusTarget(null)} confirmColor={statusTarget?.active ? 'error' : 'primary'}
+      onConfirm={changeActive} />
   </Box>;
 }

@@ -55,6 +55,7 @@ public class UserServiceImpl implements UserService {
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .mobileNumber(request.getMobileNumber())
+                .dateOfBirth(request.getDateOfBirth())
                 .shiftStartTime(request.getShiftStartTime())
                 .shiftEndTime(request.getShiftEndTime())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -90,6 +91,7 @@ public class UserServiceImpl implements UserService {
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
         user.setMobileNumber(request.getMobileNumber());
+        user.setDateOfBirth(request.getDateOfBirth());
         user.setShiftStartTime(request.getShiftStartTime());
         user.setShiftEndTime(request.getShiftEndTime());
         user.setRole(request.getRole());
@@ -159,8 +161,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserEntityById(Long id) {
-        return userRepository.findById(id)
+    public java.util.List<UserResponse> getReceptionists() {
+        User actor = tenantAccess.currentUser();
+        java.util.List<User> receptionists;
+        if (actor.getBranch() != null) {
+            receptionists = userRepository.findByRoleAndBranchIdOrderByFirstNameAsc(Role.RECEPTIONIST, actor.getBranch().getId());
+        } else if (actor.getOrganization() != null) {
+            receptionists = userRepository.findByRoleAndOrganizationIdOrderByFirstNameAsc(Role.RECEPTIONIST, actor.getOrganization().getId());
+        } else {
+            receptionists = userRepository.findByRoleOrderByFirstNameAsc(Role.RECEPTIONIST);
+        }
+        return receptionists.stream().map(userMapper::toResponse).toList();
+    }
+
+    @Override
+    public User getUserEntityById(Long id) {        return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
 

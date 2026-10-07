@@ -132,12 +132,13 @@ com.gymmanagement
 ├── organization     # organization lifecycle and tenant ownership
 ├── branch / audit   # branch settings, transfers, and branch audit history
 ├── coach / dietician # profile CRUD (creates linked User with role)
-├── client            # client profile + medical details
+├── client            # client/inquiry profile, medical details, follow-up history
+├── enrollment        # transactional client registration + membership + payment wizard
 ├── workout           # Exercise master, WorkoutPlan/Detail, TrainingSession
 ├── diet              # DietPlan/Detail
 ├── supplement / medicine
 ├── progress          # date-wise body metrics, BMI auto-calculated
-├── membership        # MembershipPlan, Membership (assign/renew)
+├── membership        # Sport/Activity master, MembershipPlan, MembershipDiscount, Membership (assign/renew)
 ├── billing           # invoices, payments, waivers, refunds, PDF/email delivery
 ├── attendance        # check-in/out and usage reports
 ├── dashboard         # admin, branch, and organization aggregates
@@ -154,6 +155,15 @@ com.gymmanagement
 - **Dashboards:** server-side admin, branch, and organization KPI aggregates.
 - **Multi-branch:** organization/branch management, branch settings, tenant-scoped access, member and
   staff transfers, immutable branch snapshots on operational records, and branch reports/exports.
+- **Inquiries:** source/sport-activity/rating capture, executive assignment (defaults to the logged-in
+  receptionist, selectable from branch receptionists), and a per-inquiry follow-up dialog with full
+  follow-up history.
+- **Sport/Activity master data:** managed from the Memberships page (tabs for Sport/Activity,
+  Membership Plans, Discounts, each with search, create, edit, and delete), and referenced by
+  membership plans for activity-based plan filtering.
+- **Client Registration Wizard:** a 2-step flow (`POST /v1/enrollments/clients`) that creates the
+  client profile, membership, invoice, and initial payment in a single transaction, with auto-generated
+  member codes, live price/discount/end-date calculation, and a post-submit invoice receipt download.
 
 See [Project Documentation](docs/PROJECT_DOCUMENTATION.md),
 [Phase 2](docs/sql/phase2.sql), and [Phase 2.1](docs/PHASE_2_1_MULTI_BRANCH.md) for API contracts and

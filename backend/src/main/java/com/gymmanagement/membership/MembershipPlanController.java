@@ -46,7 +46,7 @@ public class MembershipPlanController {
 
     @GetMapping
     @Operation(summary = "List all membership plans")
-    public ApiResponse<List<MembershipPlanResponse>> getAll() {
-        return ApiResponse.success(membershipPlanService.getAllPlans());
+    public ApiResponse<List<MembershipPlanResponse>> getAll(@RequestParam(required = false) Long activityId) {
+        return ApiResponse.success(membershipPlanService.getAllPlans(activityId));
     }
 }

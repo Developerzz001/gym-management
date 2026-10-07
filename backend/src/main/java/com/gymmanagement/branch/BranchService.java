@@ -81,6 +81,9 @@ public class BranchService {
         if (user.getRole() == Role.SUPER_ADMIN) {
             result = organizationId == null ? repository.findByBranchNameContainingIgnoreCase(search, pageable)
                     : repository.findByOrganizationIdAndBranchNameContainingIgnoreCase(organizationId, search, pageable);
+        } else if (user.getRole() == Role.ADMIN) {
+            result = organizationId == null ? repository.findByBranchNameContainingIgnoreCase(search, pageable)
+                : repository.findByOrganizationIdAndBranchNameContainingIgnoreCase(organizationId, search, pageable);
         } else if (user.getRole() == Role.ORGANIZATION_ADMIN) {
             Long scopedOrganizationId = user.getOrganization().getId();
             if (organizationId != null && !organizationId.equals(scopedOrganizationId)) {

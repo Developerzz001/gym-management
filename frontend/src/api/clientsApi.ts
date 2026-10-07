@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { axiosClient } from './axiosClient';
-import type { ApiResponse, ClientResponse, Gender, PageResponse, RegistrationType } from '@/types';
+import type { ApiResponse, ClientResponse, Gender, InquiryRating, Source, SportActivity, PageResponse, RegistrationType } from '@/types';
 
 export interface ClientRequest {
   firstName: string;
@@ -9,11 +9,19 @@ export interface ClientRequest {
   password?: string;
   active?: boolean;
   gender?: Gender;
+  source?: Source;
+  sportActivity?: SportActivity;
+  executiveId?: number;
+  rating?: InquiryRating;
+  comment?: string;
   dateOfBirth?: string;
+  inquiryDate?: string;
+  nextFollowUpDate?: string;
   heightCm?: number;
   weightKg?: number;
   address?: string;
   contactNumber?: string;
+  alternateContactNumber?: string;
   fitnessGoal?: string;
   diabetes: boolean;
   hypertension: boolean;
@@ -21,6 +29,17 @@ export interface ClientRequest {
   allergies?: string;
   injuries?: string;
   medicalNotes?: string;
+}
+
+export function useNextMemberCodeQuery(enabled = true) {
+  return useQuery({
+    queryKey: ['next-member-code'],
+    queryFn: async () => {
+      const response = await axiosClient.get<ApiResponse<string>>('/clients/next-member-code');
+      return response.data.data;
+    },
+    enabled,
+  });
 }
 
 export function useClientsQuery(keyword: string, page: number, size: number, registrationType?: RegistrationType) {

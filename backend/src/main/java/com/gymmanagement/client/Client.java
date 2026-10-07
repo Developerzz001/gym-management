@@ -57,6 +57,12 @@ public class Client extends BaseEntity {
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
+    @Column(name = "inquiry_date")
+    private LocalDate inquiryDate;
+
+    @Column(name = "next_follow_up_date")
+    private LocalDate nextFollowUpDate;
+
     @Column(name = "height_cm")
     private Double heightCm;
 
@@ -69,8 +75,33 @@ public class Client extends BaseEntity {
     @Column(name = "contact_number", length = 20)
     private String contactNumber;
 
+    @Column(name = "alternate_contact_number", length = 20)
+    private String alternateContactNumber;
+
+    @Column(name = "member_code", unique = true, length = 20)
+    private String memberCode;
+
     @Column(name = "fitness_goal", length = 255)
     private String fitnessGoal;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", length = 30)
+    private Source source;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sport_activity", length = 20)
+    private SportActivity sportActivity;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_executive_id")
+    private User assignedExecutive;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rating", length = 20)
+    private InquiryRating rating;
+
+    @Column(name = "comment", length = 1000)
+    private String comment;
 
     // Medical details
     @Builder.Default

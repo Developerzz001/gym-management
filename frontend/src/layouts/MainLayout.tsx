@@ -19,6 +19,7 @@ import {
   MenuItem,
   Divider,
   Badge,
+  Stack,
   Tooltip,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -41,6 +42,7 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import ContactPageIcon from '@mui/icons-material/ContactPage';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { clearCredentials } from '@/features/auth/authSlice';
 import { getStoredAuth, axiosClient } from '@/api/axiosClient';
@@ -58,6 +60,7 @@ interface NavItem {
 
 const NAV_ITEMS: Record<string, NavItem[]> = {
   SUPER_ADMIN: [
+    { label: 'Operations Dashboard', path: '/admin/dashboard', icon: <DashboardIcon /> },
     { label: 'Organizations', path: '/platform/organizations', icon: <BusinessIcon /> },
     { label: 'Branches', path: '/platform/branches', icon: <StoreIcon /> },
     { label: 'Organization Dashboard', path: '/platform/organization-dashboard', icon: <DashboardIcon /> },
@@ -65,6 +68,7 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
     { label: 'Reports', path: '/platform/reports', icon: <AssessmentIcon /> },
   ],
   ORGANIZATION_ADMIN: [
+    { label: 'Operations Dashboard', path: '/admin/dashboard', icon: <DashboardIcon /> },
     { label: 'Organization Dashboard', path: '/platform/organization-dashboard', icon: <DashboardIcon /> },
     { label: 'Branches', path: '/platform/branches', icon: <StoreIcon /> },
     { label: 'Branch Managers', path: '/platform/users', icon: <PeopleIcon /> },
@@ -72,16 +76,18 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
     { label: 'Settings', path: '/platform/settings', icon: <SettingsIcon /> },
   ],
   BRANCH_MANAGER: [
-    { label: 'Branch Dashboard', path: '/platform/branch-dashboard', icon: <DashboardIcon /> },
-    { label: 'Branch Staff', path: '/platform/users', icon: <PeopleIcon /> },
+    { label: 'Dashboard', path: '/admin/dashboard', icon: <DashboardIcon /> },
     { label: 'Inquiries', path: '/platform/inquiries', icon: <ContactPageIcon /> },
     { label: 'Clients', path: '/platform/clients', icon: <PeopleIcon /> },
+    { label: 'Personal Trainer', path: '/platform/personal-trainers', icon: <FitnessCenterIcon /> },
+    { label: 'Expense', path: '/platform/expenses', icon: <AttachMoneyIcon /> },
     { label: 'Membership Plans', path: '/platform/memberships', icon: <CardMembershipIcon /> },
     { label: 'Billing & Invoices', path: '/platform/billing', icon: <ReceiptLongIcon /> },
     { label: 'Transfers', path: '/platform/transfers', icon: <SwapHorizIcon /> },
     { label: 'Settings', path: '/platform/settings', icon: <SettingsIcon /> },
   ],
   RECEPTIONIST: [
+    { label: 'Dashboard', path: '/admin/dashboard', icon: <DashboardIcon /> },
     { label: 'Inquiries', path: '/platform/inquiries', icon: <ContactPageIcon /> },
     { label: 'Clients', path: '/platform/clients', icon: <PeopleIcon /> },
     { label: 'Membership Plans', path: '/platform/memberships', icon: <CardMembershipIcon /> },
@@ -130,6 +136,7 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
 
 export function MainLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [dashboardBranchName, setDashboardBranchName] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState<null | HTMLElement>(null);
   const dispatch = useAppDispatch();
@@ -146,6 +153,7 @@ export function MainLayout() {
   const markAsReadMutation = useMarkNotificationReadMutation();
 
   const navItems = (role && NAV_ITEMS[role]) || [];
+  const activeNavItem = navItems.find((item) => location.pathname === item.path);
   const notificationsOpen = Boolean(notificationsAnchorEl);
 
 
@@ -179,14 +187,14 @@ export function MainLayout() {
   };
 
   const drawer = (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Toolbar>
         <Typography variant="h6" noWrap fontWeight={700} color="primary">
           🏋️ Stryker Fit
         </Typography>
       </Toolbar>
       <Divider />
-      <List>
+      <List sx={{ flexGrow: 1 }}>
         {navItems.map((item) => (
           <ListItemButton
             key={item.path}
@@ -200,6 +208,12 @@ export function MainLayout() {
             <ListItemText primary={item.label} />
           </ListItemButton>
         ))}
+      </List>
+      <List>
+        <ListItemButton onClick={handleLogout} sx={{ borderTop: 1, borderColor: 'divider' }}>
+          <ListItemIcon><LogoutIcon /></ListItemIcon>
+          <ListItemText primary="Logout" />
+        </ListItemButton>
       </List>
     </Box>
   );
@@ -220,9 +234,12 @@ export function MainLayout() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {role === 'SUPER_ADMIN' ? 'Super Administration' : role === 'FITNESS_COACH' || role === 'COACH' ? 'Fitness Coach Portal' : role === 'DIETICIAN' ? 'Dietician Portal' : role === 'CLIENT' ? 'Client Portal' : role === 'BRANCH_MANAGER' || role === 'RECEPTIONIST' ? 'Branch Operations' : 'Organization Administration'}
-          </Typography>
+          <Stack direction="row" alignItems="baseline" spacing={1.25} sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography variant="h6" noWrap component="div">
+              {activeNavItem?.label ?? (role === 'SUPER_ADMIN' ? 'Super Administration' : role === 'FITNESS_COACH' || role === 'COACH' ? 'Fitness Coach Portal' : role === 'DIETICIAN' ? 'Dietician Portal' : role === 'CLIENT' ? 'Client Portal' : role === 'BRANCH_MANAGER' || role === 'RECEPTIONIST' ? 'Dashboard' : 'Organization Administration')}
+            </Typography>
+            {dashboardBranchName && <Typography variant="body2" color="text.secondary" noWrap>{dashboardBranchName}</Typography>}
+          </Stack>
           <Tooltip title="Notifications">
             <IconButton color="inherit" onClick={handleNotificationClick}>
               <Badge badgeContent={unreadCount ?? 0} color="error">
@@ -308,7 +325,7 @@ export function MainLayout() {
       </Box>
       <Box component="main" sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}>
         <Toolbar />
-        <Outlet />
+        <Outlet context={{ setDashboardBranchName }} />
       </Box>
       <FloatingAskBot />
     </Box>

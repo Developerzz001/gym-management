@@ -7,9 +7,10 @@ export interface UserPayload {
   lastName: string;
   email: string;
   mobileNumber?: string;
+  dateOfBirth?: string;
   shiftStartTime?: string;
   shiftEndTime?: string;
-  password: string;
+  password?: string;
   role: Role;
   organizationId?: number;
   branchId?: number;
@@ -25,5 +26,20 @@ export function useCreateUserMutation() {
   const queryClient = useQueryClient();
   return useMutation({ mutationFn: async (payload: UserPayload) =>
     (await axiosClient.post<ApiResponse<UserResponse>>('/users', payload)).data.data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tenant-users'] }) });
+}
+
+export function useReceptionistsQuery() {
+  return useQuery({
+    queryKey: ['receptionists'],
+    queryFn: async () =>
+      (await axiosClient.get<ApiResponse<UserResponse[]>>('/users/receptionists')).data.data,
+  });
+}
+
+export function useUpdateUserMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: async ({ id, payload }: { id: number; payload: UserPayload }) =>
+    (await axiosClient.put<ApiResponse<UserResponse>>(`/users/${id}`, payload)).data.data,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tenant-users'] }) });
 }

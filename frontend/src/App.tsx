@@ -1,3 +1,4 @@
+import { Box } from '@mui/material';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { MainLayout } from '@/layouts/MainLayout';
@@ -33,20 +34,20 @@ import { ProfilePage } from '@/pages/misc/ProfilePage';
 import { BillingPage } from '@/pages/admin/BillingPage';
 import { AttendancePage } from '@/pages/admin/AttendancePage';
 import { MyInvoicesPage } from '@/pages/client/MyInvoicesPage';
-import { BranchDashboardPage, BranchManagementPage, BranchReportsPage, BranchSettingsPage,
+import { BranchManagementPage, BranchReportsPage, BranchSettingsPage,
   OrganizationDashboardPage, OrganizationManagementPage, TransfersPage } from '@/pages/platform/MultiBranchPages';
 import { UserManagementPage } from '@/pages/platform/UserManagementPage';
 
 function homePathForRole(role: string | null): string {
   switch (role) {
     case 'SUPER_ADMIN':
-      return '/platform/organizations';
+      return '/admin/dashboard';
     case 'ORGANIZATION_ADMIN':
-      return '/platform/organization-dashboard';
+      return '/admin/dashboard';
     case 'BRANCH_MANAGER':
-      return '/platform/branch-dashboard';
+      return '/admin/dashboard';
     case 'RECEPTIONIST':
-      return '/platform/clients';
+      return '/admin/dashboard';
     case 'COACH':
       return '/coach/dashboard';
     case 'ADMIN':
@@ -88,8 +89,8 @@ export default function App() {
         <Route path="/platform/reports" element={<BranchReportsPage />} />
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'BRANCH_MANAGER']}><MainLayout /></ProtectedRoute>}>
-        <Route path="/platform/branch-dashboard" element={<BranchDashboardPage />} />
+      <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_ADMIN', 'BRANCH_MANAGER', 'RECEPTIONIST']}><MainLayout /></ProtectedRoute>}>
+        <Route path="/platform/branch-dashboard" element={<AdminDashboardPage />} />
       </Route>
       <Route element={<ProtectedRoute allowedRoles={['BRANCH_MANAGER', 'RECEPTIONIST']}><MainLayout /></ProtectedRoute>}>
         <Route path="/platform/inquiries" element={<InquiriesPage />} />
@@ -103,6 +104,8 @@ export default function App() {
       </Route>
       <Route element={<ProtectedRoute allowedRoles={['BRANCH_MANAGER']}><MainLayout /></ProtectedRoute>}>
         <Route path="/platform/transfers" element={<TransfersPage />} />
+        <Route path="/platform/personal-trainers" element={<Box />} />
+        <Route path="/platform/expenses" element={<Box />} />
       </Route>
       <Route element={<ProtectedRoute allowedRoles={['ORGANIZATION_ADMIN', 'BRANCH_MANAGER']}><MainLayout /></ProtectedRoute>}>
         <Route path="/platform/users" element={<UserManagementPage />} />
@@ -124,12 +127,21 @@ export default function App() {
 
       <Route
         element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
+          <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN', 'ORGANIZATION_ADMIN', 'BRANCH_MANAGER', 'RECEPTIONIST']}>
             <MainLayout />
           </ProtectedRoute>
         }
       >
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+      </Route>
+
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="/admin/inquiries" element={<InquiriesPage />} />
         <Route path="/admin/clients" element={<ClientsPage />} />
         <Route path="/admin/coaches" element={<CoachesPage />} />

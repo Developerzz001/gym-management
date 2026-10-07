@@ -13,6 +13,8 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     Optional<Client> findByUserId(Long userId);
 
+    Optional<Client> findTopByOrderByIdDesc();
+
     @Query("select c from Client c where c.assignedCoach.id = :coachId " +
             "and (c.registrationType is null or c.registrationType = com.gymmanagement.client.RegistrationType.REGISTERED)")
     List<Client> findRegisteredByAssignedCoachId(@Param("coachId") Long coachId);

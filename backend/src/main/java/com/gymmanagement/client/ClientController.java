@@ -3,6 +3,8 @@ package com.gymmanagement.client;
 import com.gymmanagement.client.dto.ClientRequest;
 import com.gymmanagement.client.dto.ClientResponse;
 import com.gymmanagement.client.dto.ClientProfileRequest;
+import com.gymmanagement.client.dto.FollowUpRequest;
+import com.gymmanagement.client.dto.FollowUpResponse;
 import com.gymmanagement.common.dto.ApiResponse;
 import com.gymmanagement.common.dto.PageResponse;
 import com.gymmanagement.common.exception.BadRequestException;
@@ -12,12 +14,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -27,6 +31,7 @@ import java.util.Set;
 public class ClientController {
 
     private final ClientService clientService;
+    private final FollowUpService followUpService;
     private final com.gymmanagement.user.UserRepository userRepository;
 
     @PostMapping
@@ -110,6 +115,13 @@ public class ClientController {
         return ApiResponse.success("Profile updated successfully", clientService.updateOwnProfile(userId, request));
     }
 
+    @GetMapping("/next-member-code")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER','RECEPTIONIST')")
+    @Operation(summary = "Preview the member code that will be assigned to the next registered client")
+    public ApiResponse<String> previewNextMemberCode() {
+        return ApiResponse.success(clientService.previewNextMemberCode());
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER','RECEPTIONIST')")
     @Operation(summary = "Search / list clients with pagination")
@@ -141,5 +153,34 @@ public class ClientController {
     @Operation(summary = "Get clients assigned to the currently logged-in dietician")
     public ApiResponse<java.util.List<ClientResponse>> getMyAssignedClientsAsDietician(Authentication authentication) {
         return ApiResponse.success(clientService.getClientsByDietician(authentication.getName()));
+    }
+
+    @GetMapping(value = "/{id}/profile-image", produces = { MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE, "image/webp" })
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER','FITNESS_COACH','COACH','DIETICIAN','RECEPTIONIST')")
+    @Operation(summary = "Get a client or inquiry profile image")
+    public ResponseEntity<byte[]> getProfileImage(@PathVariable Long id) {
+        ClientResponse client = clientService.getClientById(id);
+        com.gymmanagement.user.User user = userRepository.findById(client.getUserId()).orElseThrow();
+        if (user.getProfileImage() == null || user.getProfileImageContentType() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(user.getProfileImageContentType()))
+                .body(user.getProfileImage());
+    }
+
+    @PostMapping("/{id}/follow-ups")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER','RECEPTIONIST')")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Record a follow-up for a client or inquiry")
+    public ApiResponse<FollowUpResponse> addFollowUp(@PathVariable Long id, @Valid @RequestBody FollowUpRequest request) {
+        return ApiResponse.success("Follow-up recorded successfully", followUpService.addFollowUp(id, request));
+    }
+
+    @GetMapping("/{id}/follow-ups")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','ORGANIZATION_ADMIN','BRANCH_MANAGER','RECEPTIONIST')")
+    @Operation(summary = "Get follow-up history for a client or inquiry")
+    public ApiResponse<List<FollowUpResponse>> getFollowUps(@PathVariable Long id) {
+        return ApiResponse.success(followUpService.getFollowUps(id));
     }
 }

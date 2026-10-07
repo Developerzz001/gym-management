@@ -36,4 +36,6 @@ public interface ClientService {
     Client getClientEntityById(Long id);
 
     Client getClientEntityByUserId(Long userId);
+
+    String previewNextMemberCode();
 }

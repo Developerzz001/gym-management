@@ -21,4 +21,6 @@ public class MembershipPlanResponse {
     private BigDecimal fees;
     private Integer extraDurationDays;
     private String description;
+    private Long activityId;
+    private String activityName;
 }

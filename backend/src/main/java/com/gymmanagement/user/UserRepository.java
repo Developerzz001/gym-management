@@ -39,4 +39,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 @Param("roles") Collection<Role> roles, @Param("keyword") String keyword, Pageable pageable);
 
     long countByBranchIdAndRoleInAndActiveTrue(Long branchId, Collection<Role> roles);
+
+    java.util.List<User> findByRoleAndBranchIdOrderByFirstNameAsc(Role role, Long branchId);
+
+    java.util.List<User> findByRoleAndOrganizationIdOrderByFirstNameAsc(Role role, Long organizationId);
+
+    java.util.List<User> findByRoleOrderByFirstNameAsc(Role role);
 }

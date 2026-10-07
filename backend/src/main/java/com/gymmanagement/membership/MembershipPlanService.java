@@ -13,7 +13,7 @@ public interface MembershipPlanService {
 
     void deletePlan(Long id);
 
-    List<MembershipPlanResponse> getAllPlans();
+    List<MembershipPlanResponse> getAllPlans(Long activityId);
 
     MembershipPlan getPlanEntityById(Long id);
 }

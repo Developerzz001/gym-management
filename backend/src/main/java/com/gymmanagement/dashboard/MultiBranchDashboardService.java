@@ -36,7 +36,9 @@ public class MultiBranchDashboardService {
     public BranchDashboardResponse branch(Long branchId) {
         Branch branch = branchRepository.findById(branchId)
                 .orElseThrow(() -> new com.gymmanagement.common.exception.ResourceNotFoundException("Branch", "id", branchId));
-        tenantAccess.assertBranchAccess(branch);
+        if (tenantAccess.currentUser().getRole() != com.gymmanagement.user.Role.ADMIN) {
+            tenantAccess.assertBranchAccess(branch);
+        }
         LocalDate today = LocalDate.now();
         LocalDateTime dayStart = today.atStartOfDay();
         LocalDateTime dayEnd = today.plusDays(1).atStartOfDay();

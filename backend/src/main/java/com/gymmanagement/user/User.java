@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalTime;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -46,6 +47,9 @@ public class User extends BaseEntity {
 
     @Column(name = "mobile_number", length = 20)
     private String mobileNumber;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
 
     @Column(name = "shift_start_time")
     private LocalTime shiftStartTime;

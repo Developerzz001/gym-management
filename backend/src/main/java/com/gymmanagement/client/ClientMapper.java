@@ -25,10 +25,12 @@ public abstract class ClientMapper {
     @Mapping(target = "membershipAssigned", expression = "java(hasMembership(client))")
     @Mapping(target = "membershipStartDate", expression = "java(membershipStartDate(client))")
     @Mapping(target = "membershipEndDate", expression = "java(membershipEndDate(client))")
-    @Mapping(target = "assignedCoachId", source = "client.assignedCoach.id")
-    @Mapping(target = "assignedCoachName", expression = "java(coachName(client.getAssignedCoach()))")
-    @Mapping(target = "assignedDieticianId", source = "client.assignedDietician.id")
-    @Mapping(target = "assignedDieticianName", expression = "java(dieticianName(client.getAssignedDietician()))")
+    @Mapping(target = "assignedCoachId", expression = "java(inquiryAware(client) ? null : client.getAssignedCoach() == null ? null : client.getAssignedCoach().getId())")
+    @Mapping(target = "assignedCoachName", expression = "java(inquiryAware(client) ? null : coachName(client.getAssignedCoach()))")
+    @Mapping(target = "assignedDieticianId", expression = "java(inquiryAware(client) ? null : client.getAssignedDietician() == null ? null : client.getAssignedDietician().getId())")
+    @Mapping(target = "assignedDieticianName", expression = "java(inquiryAware(client) ? null : dieticianName(client.getAssignedDietician()))")
+    @Mapping(target = "executiveId", source = "client.assignedExecutive.id")
+    @Mapping(target = "executiveName", expression = "java(executiveName(client))")
     public abstract ClientResponse toResponse(Client client);
 
     protected String coachName(FitnessCoach coach) {
@@ -39,6 +41,15 @@ public abstract class ClientMapper {
         return dietician == null ? null : dietician.getUser().getFullName();
     }
 
+    protected String executiveName(Client client) {
+        return client.getAssignedExecutive() == null ? null : client.getAssignedExecutive().getFullName();
+    }
+
+    protected boolean inquiryAware(Client client) {
+        return client.getRegistrationType() == RegistrationType.INQUIRY;
+    }
+
+    // Inquiries are never assigned memberships/coaches/dieticians, so those fields stay unset
     protected boolean hasActiveMembership(Client client) {
         return hasMembership(client)
                 && client.getMemberships().get(0).getStatus() == com.gymmanagement.membership.MembershipStatus.ACTIVE
@@ -46,7 +57,8 @@ public abstract class ClientMapper {
     }
 
     protected boolean hasMembership(Client client) {
-        return client.getMemberships() != null && !client.getMemberships().isEmpty();
+        return client.getRegistrationType() != RegistrationType.INQUIRY
+                && client.getMemberships() != null && !client.getMemberships().isEmpty();
     }
 
     protected LocalDate membershipStartDate(Client client) {

@@ -81,6 +81,23 @@ export interface OrganizationDashboardResponse {
 
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 
+export type Source = 'WALK_IN' | 'REFERRAL' | 'FACEBOOK' | 'INSTAGRAM' | 'WHATSAPP' | 'GOOGLE' |'EXISTING_MEMBER' | 'OTHER';
+
+export type SportActivity = 'GYM' | 'SWIMMING' | 'OTHER';
+
+export type InquiryRating = 'COLD' | 'WARM' | 'HOT' | 'EXPECTED' | 'NOT_INTERESTED';
+
+export interface FollowUpResponse {
+  id: number;
+  followUpDate: string;
+  comment?: string;
+  executiveId?: number;
+  executiveName?: string;
+  nextFollowUpDate?: string;
+  rating?: InquiryRating;
+  createdAt: string;
+}
+
 export type RegistrationType = 'REGISTERED' | 'INQUIRY';
 
 export type ExerciseCategory =
@@ -126,7 +143,7 @@ export type NotificationType =
 
 export type InvoiceStatus = 'PENDING' | 'PARTIALLY_PAID' | 'PAID' | 'OVERDUE' | 'CANCELLED';
 export type InvoiceType = 'MEMBERSHIP' | 'MEMBERSHIP_RENEWAL' | 'PERSONAL_TRAINING' | 'SUPPLEMENT_PURCHASE';
-export type PaymentMethod = 'CASH' | 'UPI' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'NET_BANKING';
+export type PaymentMethod = 'CASH' | 'UPI' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'NET_BANKING' | 'CHEQUE' | 'OTHER';
 
 export interface PaymentTransactionResponse {
   id: number;
@@ -196,6 +213,49 @@ export interface AdminDashboardResponse {
   topPerformingDieticians: Array<{ staffId: number; name: string; completedActivities: number }>;
 }
 
+export type DashboardCategory = 'member-birthdays' | 'staff-birthdays' | 'inquiry-followups' |
+  'renewal-followups' | 'membership-expiring' | 'done-followups' | 'balance-payments' | 'appointments';
+
+export interface DashboardRecordResponse {
+  id: number;
+  name: string;
+  mobileNumber?: string;
+  sportActivity?: string;
+  membershipPlan?: string;
+  date?: string;
+  remainingDays?: number;
+  pendingAmount?: number;
+  dueDate?: string;
+  appointmentTime?: string;
+  followUpType?: string;
+  comment?: string;
+  doneBy?: string;
+  nextFollowUpDate?: string;
+  clientId?: number;
+}
+
+export interface DashboardCollectionResponse {
+  cash: number;
+  card: number;
+  upi: number;
+  bankTransfer: number;
+  cheque: number;
+  other: number;
+  total: number;
+}
+
+export interface OperationalDashboardSummaryResponse {
+  memberBirthdays: number;
+  staffBirthdays: number;
+  inquiryFollowups: number;
+  renewalFollowups: number;
+  membershipExpiring: number;
+  doneFollowups: number;
+  balancePayments: number;
+  appointments: number;
+  collection: DashboardCollectionResponse;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -231,6 +291,7 @@ export interface UserResponse {
   lastName: string;
   email: string;
   mobileNumber?: string;
+  dateOfBirth?: string;
   shiftStartTime?: string;
   shiftEndTime?: string;
   role: Role;
@@ -259,11 +320,21 @@ export interface ClientResponse {
   membershipEndDate?: string;
   registrationType: RegistrationType;
   gender?: Gender;
+  source?: Source;
+  sportActivity?: SportActivity;
+  executiveId?: number;
+  executiveName?: string;
+  rating?: InquiryRating;
+  comment?: string;
   dateOfBirth?: string;
+  inquiryDate?: string;
+  nextFollowUpDate?: string;
   heightCm?: number;
   weightKg?: number;
   address?: string;
   contactNumber?: string;
+  alternateContactNumber?: string;
+  memberCode?: string;
   fitnessGoal?: string;
   diabetes: boolean;
   hypertension: boolean;
@@ -408,6 +479,12 @@ export interface ProgressRecordResponse {
   thighCm?: number;
 }
 
+export interface ActivityResponse {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 export interface MembershipPlanResponse {
   id: number;
   name: string;
@@ -415,6 +492,8 @@ export interface MembershipPlanResponse {
   fees: number;
   extraDurationDays: number;
   description?: string;
+  activityId?: number;
+  activityName?: string;
 }
 
 export interface MembershipDiscountResponse {
@@ -435,6 +514,11 @@ export interface MembershipResponse {
   startDate: string;
   endDate: string;
   status: MembershipStatus;
+}
+
+export interface EnrollmentResponse {
+  client: ClientResponse;
+  invoice: InvoiceResponse;
 }
 
 export interface NotificationResponse {

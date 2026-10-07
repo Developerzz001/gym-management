@@ -31,6 +31,8 @@ import { useAssignCoachMutation, useAssignDieticianMutation } from '@/api/assign
 import { extractErrorMessage } from '@/api/axiosClient';
 import { useAppSelector } from '@/app/hooks';
 import { ClientFormDialog } from './ClientFormDialog';
+import { ClientRegistrationWizard } from './ClientRegistrationWizard';
+import { InquiryFollowUpDialog } from './InquiryFollowUpDialog';
 import type { ClientResponse, RegistrationType } from '@/types';
 
 function ClientManagementPage({ registrationType }: { registrationType: RegistrationType }) {
@@ -50,6 +52,8 @@ function ClientManagementPage({ registrationType }: { registrationType: Registra
   const [assignCoachId, setAssignCoachId] = useState<number | ''>('');
   const [assignDieticianId, setAssignDieticianId] = useState<number | ''>('');
   const [assignError, setAssignError] = useState<string | null>(null);
+  const [followUpTarget, setFollowUpTarget] = useState<ClientResponse | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const { data, isLoading } = useClientsQuery(keyword, page, pageSize, registrationType);
   const { data: coaches } = useCoachesQuery('', 0, 100, canManageAssignments);
@@ -60,52 +64,82 @@ function ClientManagementPage({ registrationType }: { registrationType: Registra
   const assignDieticianMutation = useAssignDieticianMutation();
 
   const columns: GridColDef<ClientResponse>[] = [
-    { field: 'firstName', headerName: 'First Name', width: 140 },
-    { field: 'lastName', headerName: 'Last Name', width: 140 },
-    { field: 'email', headerName: 'Email', width: 240 },
-    { field: 'contactNumber', headerName: 'Contact', width: 150 },
-    {
-      field: 'membershipAssigned', headerName: 'Membership', width: 145,
-      renderCell: (params) => (
-        <Chip
-          size="small"
-          label={params.row.membershipAssigned ? 'Assigned' : 'Not Assigned'}
-          color={params.row.membershipAssigned ? 'primary' : 'default'}
-          variant="outlined"
-        />
-      ),
-    },
-    {
-      field: 'membershipStartDate', headerName: 'Started', width: 125,
-      valueGetter: (_value, row) => row.membershipStartDate ?? '-',
-    },
-    {
-      field: 'membershipEndDate', headerName: 'Expires', width: 125,
-      valueGetter: (_value, row) => row.membershipEndDate ?? '-',
-    },
-    {
-      field: 'assignedCoachName', headerName: 'Coach', width: 170,
-      renderCell: (params) => params.value || <Chip size="small" label="Unassigned" variant="outlined" />,
-    },
-    {
-      field: 'assignedDieticianName', headerName: 'Dietician', width: 170,
-      renderCell: (params) => params.value || <Chip size="small" label="Unassigned" variant="outlined" />,
-    },
-    {
-      field: 'active', headerName: 'Status', width: 110,
-      valueGetter: (_value, row) => row.membershipActive ? 'Active' : 'Inactive',
-      renderCell: (params) => (
-        <Chip size="small" label={params.row.membershipActive ? 'Active' : 'Inactive'} color={params.row.membershipActive ? 'success' : 'default'} />
-      ),
-    },
-    {
-      field: 'registrationType', headerName: 'Type', width: 120,
-      valueGetter: (_value, row) => row.registrationType === 'INQUIRY' ? 'Inquiry' : 'Client',
-      renderCell: (params) => (
-        <Chip size="small" label={params.row.registrationType === 'INQUIRY' ? 'Inquiry' : 'Client'}
-          color={params.row.registrationType === 'INQUIRY' ? 'warning' : 'success'} variant="outlined" />
-      ),
-    },
+    // Inquiries surface a leaner, follow-up focused column set instead of client management fields
+    ...(isInquiryPage ? [
+      {
+        field: 'inquiryDate', headerName: 'Date', width: 115,
+        valueGetter: (_value, row) => row.inquiryDate ?? '-',
+      },
+      { field: 'contactNumber', headerName: 'Phone No', width: 140 },
+      {
+        field: 'name', headerName: 'Name', width: 180,
+        valueGetter: (_value, row) => `${row.firstName} ${row.lastName ?? ''}`.trim(),
+      },
+      {
+        field: 'gender', headerName: 'Gender', width: 100,
+        valueGetter: (_value, row) => row.gender ?? '-',
+      },
+      {
+        field: 'sportActivity', headerName: 'Sports / Activity', width: 150,
+        valueGetter: (_value, row) => row.sportActivity ?? '-',
+      },
+      {
+        field: 'rating', headerName: 'Rating', width: 130,
+        renderCell: (params) => params.value
+          ? <Chip size="small" label={String(params.value).replace('_', ' ')} variant="outlined" />
+          : <Chip size="small" label="Not Rated" variant="outlined" />,
+      },
+    ] as GridColDef<ClientResponse>[] : [
+      { field: 'firstName', headerName: 'First Name', width: 140 },
+      { field: 'lastName', headerName: 'Last Name', width: 140 },
+      { field: 'email', headerName: 'Email', width: 240 },
+      { field: 'contactNumber', headerName: 'Contact', width: 150 },
+    ] as GridColDef<ClientResponse>[]),
+    // Membership, coach/dietician, status, and type columns are not applicable to inquiries
+    ...(isInquiryPage ? [] : [
+      {
+        field: 'membershipAssigned', headerName: 'Membership', width: 145,
+        renderCell: (params) => (
+          <Chip
+            size="small"
+            label={params.row.membershipAssigned ? 'Assigned' : 'Not Assigned'}
+            color={params.row.membershipAssigned ? 'primary' : 'default'}
+            variant="outlined"
+          />
+        ),
+      },
+      {
+        field: 'membershipStartDate', headerName: 'Started', width: 125,
+        valueGetter: (_value, row) => row.membershipStartDate ?? '-',
+      },
+      {
+        field: 'membershipEndDate', headerName: 'Expires', width: 125,
+        valueGetter: (_value, row) => row.membershipEndDate ?? '-',
+      },
+      {
+        field: 'assignedCoachName', headerName: 'Coach', width: 170,
+        renderCell: (params) => params.value || <Chip size="small" label="Unassigned" variant="outlined" />,
+      },
+      {
+        field: 'assignedDieticianName', headerName: 'Dietician', width: 170,
+        renderCell: (params) => params.value || <Chip size="small" label="Unassigned" variant="outlined" />,
+      },
+      {
+        field: 'active', headerName: 'Status', width: 110,
+        valueGetter: (_value, row) => row.membershipActive ? 'Active' : 'Inactive',
+        renderCell: (params) => (
+          <Chip size="small" label={params.row.membershipActive ? 'Active' : 'Inactive'} color={params.row.membershipActive ? 'success' : 'default'} />
+        ),
+      },
+      {
+        field: 'registrationType', headerName: 'Type', width: 120,
+        valueGetter: (_value, row) => row.registrationType === 'INQUIRY' ? 'Inquiry' : 'Client',
+        renderCell: (params) => (
+          <Chip size="small" label={params.row.registrationType === 'INQUIRY' ? 'Inquiry' : 'Client'}
+            color={params.row.registrationType === 'INQUIRY' ? 'warning' : 'success'} variant="outlined" />
+        ),
+      },
+    ] as GridColDef<ClientResponse>[]),
     {
       field: 'actions', headerName: 'Actions', width: 160, sortable: false,
       renderCell: (params) => (
@@ -185,7 +219,7 @@ function ClientManagementPage({ registrationType }: { registrationType: Registra
           <Button
             variant="contained"
             startIcon={isInquiryPage ? <ContactPageIcon /> : <AddIcon />}
-            onClick={() => { setSelectedClient(null); setFormOpen(true); }}
+            onClick={() => { if (isInquiryPage) { setSelectedClient(null); setFormOpen(true); } else { setWizardOpen(true); } }}
           >
             {isInquiryPage ? 'Register Inquiry' : 'Register Client'}
           </Button>
@@ -213,6 +247,12 @@ function ClientManagementPage({ registrationType }: { registrationType: Registra
           onPaginationModelChange={(model) => { setPage(model.page); setPageSize(model.pageSize); }}
           pageSizeOptions={[5, 10, 25, 50]}
           disableRowSelectionOnClick
+          onCellClick={(params) => {
+            if (isInquiryPage && params.field !== 'actions') {
+              setFollowUpTarget(params.row);
+            }
+          }}
+          sx={isInquiryPage ? { '& .MuiDataGrid-row': { cursor: 'pointer' } } : undefined}
         />
       </Paper>
 
@@ -228,6 +268,12 @@ function ClientManagementPage({ registrationType }: { registrationType: Registra
         client={conversionTarget}
         conversion
       />
+      <InquiryFollowUpDialog
+        open={!!followUpTarget}
+        onClose={() => setFollowUpTarget(null)}
+        client={followUpTarget}
+      />
+      <ClientRegistrationWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
 
       <ConfirmDialog
         open={!!deactivateTarget}

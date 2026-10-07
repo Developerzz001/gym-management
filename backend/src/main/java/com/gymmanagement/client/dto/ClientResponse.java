@@ -1,7 +1,10 @@
 package com.gymmanagement.client.dto;
 
 import com.gymmanagement.client.Gender;
+import com.gymmanagement.client.InquiryRating;
 import com.gymmanagement.client.RegistrationType;
+import com.gymmanagement.client.Source;
+import com.gymmanagement.client.SportActivity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,11 +37,22 @@ public class ClientResponse {
 
     private Gender gender;
     private LocalDate dateOfBirth;
+    private LocalDate inquiryDate;
+    private LocalDate nextFollowUpDate;
     private Double heightCm;
     private Double weightKg;
     private String address;
     private String contactNumber;
+    private String alternateContactNumber;
+    private String memberCode;
     private String fitnessGoal;
+
+    private Source source;
+    private SportActivity sportActivity;
+    private Long executiveId;
+    private String executiveName;
+    private InquiryRating rating;
+    private String comment;
 
     private boolean diabetes;
     private boolean hypertension;
